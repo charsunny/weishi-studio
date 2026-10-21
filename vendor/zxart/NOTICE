@@ -1,0 +1,39 @@
+画屏 · 程序化背景 (admin 预览) —— 第三方代码与出处
+
+shan-shui-inf/   Lingdong Huang, "shan-shui-inf" (2018), MIT License — shan-shui-inf/LICENSE
+                 https://github.com/LingDong-/shan-shui-inf
+                 commit 9f754d2b2e73495db7883d4d4055a7b0903b0454, index.html 的 <script> 块逐字拆出:
+                   0-prng.js        <script id="PRNG">
+                   1-seed.js        第 2 个 <script> (从 URL 读 seed)
+                   2-perlin.js      <script id="PerlinNoise">
+                   3-polytools.js   <script id="PolyTools">
+                   4-util.js        <script id="Util">
+                   5-generators.js  第 6 个 <script> (笔触、树、山、建筑、人物、水、规划)
+                   13-paper.js      最后一个 <script> (512×512 纸纹)
+                 除拆分外未作任何修改。
+
+nonflowers/      Lingdong Huang, "nonflowers" (2018), MIT License — nonflowers/LICENSE
+                 https://github.com/LingDong-/nonflowers
+                 commit 03b653d220f16c6bed7ea9c7edc852f7e91846cb, main.js 逐字未改。
+
+zxart-compose.js / zxart-worker.js
+                 PoetryHub 自己的代码: 在 Web Worker 里调用上面两个原作, 竖幅构图 / 调色 / 渲染
+                 按 zixiao-kit ZixiaoArt @1 (定稿 commit 60efe4b) 逐行翻译, 使同一 seed 与 iOS 出同一幅画
+                 (web/__tests__/huaping-procedural.test.ts 用 kit 的 procedural-v1.json 金标对拍)。
+
+iOS 端 (zixiao-kit ZixiaoArt) 的致谢与许可全文见 ZXArt.acknowledgements。
+
+shanshui@3 (wish web 的第 4b 步)
+                 zxart-compose.js 内独立 Brush / WashNoise / Rim 与 @3 画法载荷移植自
+                 zixiao-kit master 6556ee2:
+                   Core/ZXArtBrush.swift, ZXArtWash.swift, ZXArtRim.swift
+                   ShanShui/ShanShuiSceneV3.swift, ShanShuiPrimitivesV3.swift,
+                   ShanShuiPaintV3.swift, ShanShuiMountV3.swift, ShanShuiTreesV3.swift,
+                   ShanShuiArchV3.swift; ZXArtProcedural.swift 的退回开关。
+                 构图仍直接调用上面的原作 JS; @3 只附加画法, 使用 @2 的旧轮廓 fit/cull。
+                 zxart-worker.js 的 drawWashed / WashSamples 对照 Core/ZXArtRenderer.swift,
+                 半分辨率 alpha 源 + 两档 12 点盘 + 64 行色带, 噪声采用逻辑坐标。
+                 Canvas 无 alphaOnly 上下文: 提取源时短暂使用 RGBA, 保留的源为一字节 alpha。
+                 Brush / WashNoise 同放 compose.js, worker 与 node:vm 使用相同加载顺序。
+                 web 默认关闭 @3, 关闭时退回 @2; 不修改 @1/@2 的画法或第三方原作。
+                 新金标待 Mac 生成; 复制位置及跳过策略见 __tests__/fixtures/ZXART_V3.md。

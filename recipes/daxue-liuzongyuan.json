@@ -1,0 +1,37 @@
+{
+  "id": "daxue-liuzongyuan",
+  "title": "江雪",
+  "dynasty": "唐",
+  "author": "柳宗元",
+  "term": "大雪",
+  "lunar": "十月廿六 · 大雪 · 鹖鴠不鸣",
+  "layout": "quote",
+  "paletteId": "yuebai",
+  "scheme": "light",
+  "audioMode": "bgm+foley",
+  "bgm": "/artifacts/promo-8.0/assets/audio/radio-calm.m4a",
+  "lines": [
+    "千山鸟飞绝",
+    "万径人踪灭",
+    "孤舟蓑笠翁",
+    "独钓寒江雪"
+  ],
+  "fullLines": [
+    "千山鸟飞绝，万径人踪灭。",
+    "孤舟蓑笠翁，独钓寒江雪。"
+  ],
+  "note": "永州十年，天地凛冽皆白，唯寒江一叶扁舟与渔翁孤影不动。",
+  "seal": "微詩",
+  "procedural": {
+    "generator": "shanshui@2",
+    "seed": "daxue-liuzongyuan-80",
+    "variant": "distant",
+    "params": {
+      "density": 0.78,
+      "quiet_top": 0.36,
+      "verse_side": "left",
+      "verse_columns": 4,
+      "verse_chars": 5
+    }
+  }
+}

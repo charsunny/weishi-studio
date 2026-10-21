@@ -1,0 +1,613 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>微诗视频工作台 · Weishi Video Studio</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    height: 100vh;
+    display: grid;
+    grid-template-columns: 310px 1fr 320px;
+    grid-template-rows: 56px 1fr 84px;
+    background: #0d1214;
+    color: #e6ecef;
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", sans-serif;
+    overflow: hidden;
+  }
+
+  /* 顶栏 */
+  header {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 22px;
+    background: #121a1d;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+  }
+  .brand-seal {
+    width: 26px;
+    height: 26px;
+    border-radius: 5px;
+    background: #9B382B;
+    color: #faf6f0;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-family: "Songti SC", serif;
+  }
+  .header-meta {
+    font-size: 12px;
+    color: rgba(230, 236, 239, 0.55);
+    display: flex;
+    gap: 18px;
+    align-items: center;
+  }
+  .status-pill {
+    padding: 4px 10px;
+    border-radius: 99px;
+    font-size: 12px;
+    background: rgba(86, 176, 128, 0.16);
+    color: #7CE0A8;
+    border: 1px solid rgba(124, 224, 168, 0.3);
+  }
+
+  /* 左侧母版与配方列表 */
+  aside.left {
+    background: #10171a;
+    border-right: 1px solid rgba(255, 255, 255, 0.07);
+    padding: 18px 14px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+  .sec-title {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: rgba(230, 236, 239, 0.45);
+    padding: 0 8px;
+    margin-bottom: 6px;
+  }
+  .preset-btn {
+    width: 100%;
+    text-align: left;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 8px;
+    padding: 11px 12px;
+    color: #e6ecef;
+    cursor: pointer;
+    margin-bottom: 7px;
+    transition: background 0.15s, border-color 0.15s;
+  }
+  .preset-btn:hover {
+    background: rgba(255, 255, 255, 0.06);
+  }
+  .preset-btn.active {
+    background: rgba(155, 56, 43, 0.22);
+    border-color: #B04A3A;
+  }
+  .p-name {
+    font-size: 13.5px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .p-ratio {
+    font-size: 11px;
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(230, 236, 239, 0.75);
+    font-weight: 400;
+  }
+  .p-desc {
+    font-size: 12px;
+    color: rgba(230, 236, 239, 0.55);
+    line-height: 1.4;
+  }
+
+  /* 中央画布预览舞台 */
+  main.viewport {
+    position: relative;
+    background: radial-gradient(circle at center, #182226 0%, #0b1012 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    padding: 24px;
+  }
+  #frame-box {
+    position: relative;
+    box-shadow: 0 24px 72px rgba(0, 0, 0, 0.65), 0 0 0 1px rgba(255, 255, 255, 0.12);
+    border-radius: 6px;
+    overflow: hidden;
+    background: #000;
+    transform-origin: center center;
+  }
+  iframe {
+    border: 0;
+    display: block;
+    pointer-events: none;
+  }
+
+  /* 右侧导演检查器面板 */
+  aside.right {
+    background: #10171a;
+    border-left: 1px solid rgba(255, 255, 255, 0.07);
+    padding: 18px 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 8px;
+    padding: 12px 14px;
+  }
+  .kv-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12.5px;
+    padding: 5px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+  .kv-row:last-child { border-bottom: 0; }
+  .kv-k { color: rgba(230, 236, 239, 0.52); }
+  .kv-v { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #f2f5f7; }
+
+  .cue-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    padding: 6px 8px;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    background: rgba(255, 255, 255, 0.03);
+    cursor: pointer;
+  }
+  .cue-item:hover { background: rgba(255, 255, 255, 0.08); }
+  .cue-time {
+    font-family: ui-monospace, monospace;
+    color: #E5A965;
+  }
+  .text-live {
+    font-size: 13px;
+    line-height: 1.55;
+    color: #d8e2e6;
+    font-family: "Songti SC", serif;
+    padding: 6px 0;
+  }
+  pre.cli-box {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 11.5px;
+    line-height: 1.5;
+    color: #9ad1b5;
+    background: #090d0f;
+    padding: 10px;
+    border-radius: 6px;
+    overflow-x: auto;
+    white-space: pre-wrap;
+    word-break: break-all;
+  }
+
+  /* 底部确定性时间轴控制栏 */
+  footer {
+    grid-column: 1 / -1;
+    background: #121a1d;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .ctrl-btn {
+    background: rgba(255, 255, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: #fff;
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .ctrl-btn:hover { background: rgba(255, 255, 255, 0.14); }
+  .timeline-box {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  #scrubber {
+    width: 100%;
+    accent-color: #B04A3A;
+    cursor: pointer;
+  }
+  #ev-markers {
+    position: relative;
+    height: 14px;
+    width: 100%;
+  }
+  .ev-pin {
+    position: absolute;
+    top: 0;
+    transform: translateX(-50%);
+    font-size: 10px;
+    color: #E5A965;
+    background: rgba(229, 169, 101, 0.16);
+    border: 1px solid rgba(229, 169, 101, 0.4);
+    padding: 0 5px;
+    border-radius: 3px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .time-readout {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 13px;
+    min-width: 175px;
+    text-align: right;
+  }
+</style>
+</head>
+<body>
+  <header>
+    <div class="brand">
+      <span class="brand-seal">詩</span>
+      <span>微诗视频工作台 · Weishi Video Studio</span>
+    </div>
+    <div class="header-meta">
+      <span>确定性帧函数契约: <code>window.render(t)</code></span>
+      <span class="status-pill" id="ready-badge">加载中...</span>
+    </div>
+  </header>
+
+  <aside class="left">
+    <div>
+      <div class="sec-title">五大东方美学母版 · 预设剧目</div>
+      <div id="preset-list"></div>
+    </div>
+  </aside>
+
+  <main class="viewport" id="viewport">
+    <div id="frame-box">
+      <iframe id="stage-iframe" width="1080" height="1920"></iframe>
+    </div>
+  </main>
+
+  <aside class="right">
+    <div>
+      <div class="sec-title">当前镜头参数</div>
+      <div class="card">
+        <div class="kv-row"><span class="kv-k">母版风格</span><span class="kv-v" id="info-style">-</span></div>
+        <div class="kv-row"><span class="kv-k">画幅分辨率</span><span class="kv-v" id="info-size">1080×1920</span></div>
+        <div class="kv-row"><span class="kv-k">总时长 (DUR)</span><span class="kv-v" id="info-dur">-</span></div>
+        <div class="kv-row"><span class="kv-k">总帧数 (@30fps)</span><span class="kv-v" id="info-frames">-</span></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sec-title">实时可读文本快照 · window.TEXTS(t)</div>
+      <div class="card" id="live-texts">
+        <div class="text-live" style="opacity:0.5">当前帧无字幕</div>
+      </div>
+    </div>
+
+    <div>
+      <div class="sec-title">东方拟音触发点 · window.EV</div>
+      <div class="card" id="ev-list"></div>
+    </div>
+
+    <div>
+      <div class="sec-title">CLI 极速渲染与质检指令</div>
+      <pre class="cli-box" id="cli-cmd"></pre>
+    </div>
+  </aside>
+
+  <footer>
+    <button class="ctrl-btn" id="btn-play">暂停 (Space)</button>
+    <button class="ctrl-btn" id="btn-prev" title="上一帧">◀ 帧</button>
+    <button class="ctrl-btn" id="btn-next" title="下一帧">帧 ▶</button>
+    <div class="timeline-box">
+      <input type="range" id="scrubber" min="0" max="15" step="0.01" value="0" />
+      <div id="ev-markers"></div>
+    </div>
+    <div class="time-readout" id="time-readout">00.00s / 15.00s (F0)</div>
+  </footer>
+
+<script>
+  const PRESETS = [
+    {
+      id: 'hanlu-quote',
+      name: '寒露 · 杜甫《月夜忆舍弟》',
+      style: 'huaping-motion',
+      ratio: '9:16',
+      w: 1080,
+      h: 1920,
+      desc: '蓝灰深色 · ZixiaoArt 山水@2 · 雁阵 + 明月 + 孤舟渔灯',
+      url: '/tools/video-studio/templates/huaping-motion/index.html?recipe=hanlu-dufu&capture=1',
+      cli: 'node tools/video-studio/bin/render.mjs --scene huaping-motion --recipe hanlu-dufu --workers 4 --sheet',
+    },
+    {
+      id: 'qingming-quote',
+      name: '清明 · 杜牧《清明》',
+      style: 'huaping-motion',
+      ratio: '9:16',
+      w: 1080,
+      h: 1920,
+      desc: '鸭卵青浅宣 · ZixiaoArt 烟雨山水 · 细雨 + 水纹涟漪 + 山岚',
+      url: '/tools/video-studio/templates/huaping-motion/index.html?recipe=qingming-dumu&capture=1',
+      cli: 'node tools/video-studio/bin/render.mjs --scene huaping-motion --recipe qingming-dumu --workers 4 --sheet',
+    },
+    {
+      id: 'daxue-quote',
+      name: '大雪 · 柳宗元《江雪》',
+      style: 'huaping-motion',
+      ratio: '9:16',
+      w: 1080,
+      h: 1920,
+      desc: '月白浅宣 · ZixiaoArt 寒江孤舟 · 飞雪慢落 + 山岚',
+      url: '/tools/video-studio/templates/huaping-motion/index.html?recipe=daxue-liuzongyuan&capture=1',
+      cli: 'node tools/video-studio/bin/render.mjs --scene huaping-motion --recipe daxue-liuzongyuan --workers 4 --sheet',
+    },
+    {
+      id: 'hanlu-detail',
+      name: '详情页全屏 · 杜甫《月夜忆舍弟》',
+      style: 'huaping-motion (detail)',
+      ratio: '9:16',
+      w: 1080,
+      h: 1920,
+      desc: '横排全诗 · 0.4s 起按行墨洇 <=2.5s · 背景缓推 2%',
+      url: '/tools/video-studio/templates/huaping-motion/index.html?recipe=hanlu-dufu&layout=detail&capture=1',
+      cli: 'node tools/video-studio/bin/render.mjs --scene "/tools/video-studio/templates/huaping-motion/index.html?recipe=hanlu-dufu&layout=detail" --out tools/video-studio/out/hanlu-detail.mp4',
+    },
+    {
+      id: 'ink-story-wanqing',
+      name: '写意水墨 · 杜甫《晚晴》(朗读同步)',
+      style: 'ink-story',
+      ratio: '9:16',
+      w: 1080,
+      h: 1920,
+      desc: '暖宣五墨 · Voicebox 朗读词级对齐 · 书法题跋 + 夕照残雨',
+      url: '/tools/video-studio/templates/ink-story/index.html?recipe=wanqing-dufu-story&capture=1',
+      cli: 'node tools/video-studio/bin/render.mjs --scene ink-story --recipe wanqing-dufu-story --workers 4 --sheet',
+    },
+    {
+      id: 'poem-song-sumuzhe',
+      name: '一曲诗词 MV · 范仲淹《苏幕遮》',
+      style: 'poem-song-mv',
+      ratio: '9:16',
+      w: 1080,
+      h: 1920,
+      desc: '鸦青深色 · Mureka 原创宋词歌曲 · BPM 金线声波 + 逐句高亮',
+      url: '/tools/video-studio/templates/poem-song-mv/index.html?recipe=sumuzhe-fanzhongyan-mv&capture=1',
+      cli: 'node tools/video-studio/bin/render.mjs --scene poem-song-mv --recipe sumuzhe-fanzhongyan-mv --workers 4 --sheet',
+    },
+    {
+      id: 'poet-footprint-sushi',
+      name: '诗人行迹 · 苏轼三万里贬谪路',
+      style: 'poet-footprint',
+      ratio: '9:16',
+      w: 1080,
+      h: 1920,
+      desc: '缃色古风舆图 · 黄州 -> 惠州 -> 儋州 · 纪年刻度尺',
+      url: '/tools/video-studio/templates/poet-footprint/index.html?capture=1',
+      cli: 'node tools/video-studio/bin/render.mjs --scene poet-footprint --workers 4 --sheet',
+    },
+    {
+      id: 'promo-80-vertical',
+      name: '微诗 8.0 宣传片（竖屏版）',
+      style: 'living-promo',
+      ratio: '9:16',
+      w: 1080,
+      h: 1920,
+      desc: '50s 九幕完整版 · 含动态山水/二十四节气/iPhone Duo',
+      url: '/artifacts/promo-8.0/vertical.html?capture=1',
+      cli: 'cd artifacts/promo-8.0 && node render.mjs --vertical',
+    },
+    {
+      id: 'promo-80-horizontal',
+      name: '微诗 8.0 宣传片（横屏版）',
+      style: 'living-promo',
+      ratio: '16:9',
+      w: 1920,
+      h: 1080,
+      desc: '1920×1080 宽银幕 · 50s 九幕完整版',
+      url: '/artifacts/promo-8.0/index.html?capture=1',
+      cli: 'cd artifacts/promo-8.0 && node render.mjs',
+    },
+  ];
+
+  const presetListEl = document.getElementById('preset-list');
+  const iframe = document.getElementById('stage-iframe');
+  const frameBox = document.getElementById('frame-box');
+  const viewport = document.getElementById('viewport');
+  const scrubber = document.getElementById('scrubber');
+  const timeReadout = document.getElementById('time-readout');
+  const btnPlay = document.getElementById('btn-play');
+  const readyBadge = document.getElementById('ready-badge');
+
+  let currentPreset = PRESETS[0];
+  let dur = 15;
+  let currentT = 0;
+  let playing = true;
+  let lastTick = performance.now();
+
+  function fitFrame() {
+    const rect = viewport.getBoundingClientRect();
+    const availW = rect.width - 48;
+    const availH = rect.height - 48;
+    const scale = Math.min(availW / currentPreset.w, availH / currentPreset.h);
+    frameBox.style.width = `${Math.round(currentPreset.w * scale)}px`;
+    frameBox.style.height = `${Math.round(currentPreset.h * scale)}px`;
+    iframe.style.width = `${currentPreset.w}px`;
+    iframe.style.height = `${currentPreset.h}px`;
+    iframe.style.transform = `scale(${scale})`;
+    iframe.style.transformOrigin = 'top left';
+  }
+  window.addEventListener('resize', fitFrame);
+
+  function selectPreset(p) {
+    currentPreset = p;
+    document.querySelectorAll('.preset-btn').forEach((b) => {
+      b.classList.toggle('active', b.dataset.id === p.id);
+    });
+    readyBadge.textContent = '渲染器预热中...';
+    readyBadge.style.opacity = '0.6';
+    document.getElementById('info-style').textContent = p.style;
+    document.getElementById('info-size').textContent = `${p.w}×${p.h} (${p.ratio})`;
+    document.getElementById('cli-cmd').textContent = p.cli;
+    fitFrame();
+    iframe.src = p.url;
+  }
+
+  PRESETS.forEach((p) => {
+    const btn = document.createElement('button');
+    btn.className = 'preset-btn';
+    btn.dataset.id = p.id;
+    btn.innerHTML = `
+      <div class="p-name"><span>${p.name}</span><span class="p-ratio">${p.ratio}</span></div>
+      <div class="p-desc">${p.desc}</div>
+    `;
+    btn.onclick = () => selectPreset(p);
+    presetListEl.appendChild(btn);
+  });
+
+  iframe.addEventListener('load', () => {
+    const win = iframe.contentWindow;
+    const poll = setInterval(() => {
+      if (win && win.READY && typeof win.render === 'function') {
+        clearInterval(poll);
+        dur = Number(win.DUR) || 15;
+        scrubber.max = String(dur);
+        currentT = 0;
+        readyBadge.textContent = 'READY · 确定性核已就绪';
+        readyBadge.style.opacity = '1';
+        document.getElementById('info-dur').textContent = `${dur.toFixed(1)}s`;
+        document.getElementById('info-frames').textContent = `${Math.round(dur * 30)} 帧`;
+        renderEvMarkers(win.EV || []);
+        applyTime(0);
+      }
+    }, 60);
+  });
+
+  function renderEvMarkers(evs) {
+    const markersEl = document.getElementById('ev-markers');
+    const listEl = document.getElementById('ev-list');
+    markersEl.innerHTML = '';
+    listEl.innerHTML = '';
+    if (!evs.length) {
+      listEl.innerHTML = '<div style="font-size:12px;opacity:0.5">当前场景无声明式音效</div>';
+      return;
+    }
+    evs.forEach((e) => {
+      const pct = Math.min(98, Math.max(2, (e.t / dur) * 100));
+      const pin = document.createElement('div');
+      pin.className = 'ev-pin';
+      pin.style.left = `${pct}%`;
+      pin.textContent = e.sfx;
+      pin.onclick = () => {
+        playing = false;
+        updatePlayBtn();
+        applyTime(e.t);
+      };
+      markersEl.appendChild(pin);
+
+      const row = document.createElement('div');
+      row.className = 'cue-item';
+      row.innerHTML = `<span class="cue-time">${Number(e.t).toFixed(2)}s</span><span>${e.sfx}</span><span style="opacity:0.5">${e.gain ?? -6}dB</span>`;
+      row.onclick = () => {
+        playing = false;
+        updatePlayBtn();
+        applyTime(e.t);
+      };
+      listEl.appendChild(row);
+    });
+  }
+
+  function applyTime(t) {
+    currentT = Math.max(0, Math.min(dur, t));
+    scrubber.value = String(currentT);
+    const frameIdx = Math.round(currentT * 30);
+    timeReadout.textContent = `${currentT.toFixed(2).padStart(5, '0')}s / ${dur.toFixed(2)}s (F${frameIdx})`;
+    const win = iframe.contentWindow;
+    if (win && typeof win.render === 'function') {
+      win.render(currentT);
+      if (typeof win.TEXTS === 'function') {
+        const txts = win.TEXTS(currentT) || [];
+        const box = document.getElementById('live-texts');
+        if (txts.length === 0) {
+          box.innerHTML = '<div class="text-live" style="opacity:0.45">当前帧无可见字幕</div>';
+        } else {
+          box.innerHTML = txts.map((x) => `<div class="text-live">· ${x.text}</div>`).join('');
+        }
+      }
+    }
+  }
+
+  function updatePlayBtn() {
+    btnPlay.textContent = playing ? '暂停 (Space)' : '播放 (Space)';
+  }
+
+  btnPlay.onclick = () => {
+    playing = !playing;
+    lastTick = performance.now();
+    updatePlayBtn();
+  };
+  document.getElementById('btn-prev').onclick = () => {
+    playing = false;
+    updatePlayBtn();
+    applyTime(currentT - 1 / 30);
+  };
+  document.getElementById('btn-next').onclick = () => {
+    playing = false;
+    updatePlayBtn();
+    applyTime(currentT + 1 / 30);
+  };
+  scrubber.oninput = () => {
+    playing = false;
+    updatePlayBtn();
+    applyTime( parseFloat(scrubber.value) );
+  };
+  window.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+      e.preventDefault();
+      btnPlay.click();
+    } else if (e.code === 'ArrowLeft') {
+      document.getElementById('btn-prev').click();
+    } else if (e.code === 'ArrowRight') {
+      document.getElementById('btn-next').click();
+    }
+  });
+
+  function loop(now) {
+    const dt = (now - lastTick) / 1000;
+    lastTick = now;
+    if (playing && iframe.contentWindow?.READY) {
+      applyTime((currentT + dt) % dur);
+    }
+    requestAnimationFrame(loop);
+  }
+
+  selectPreset(PRESETS[0]);
+  requestAnimationFrame(loop);
+</script>
+</body>
+</html>

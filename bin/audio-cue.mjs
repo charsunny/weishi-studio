@@ -1,0 +1,117 @@
+#!/usr/bin/env node
+/**
+ * 微诗视频工作台 · 音频先行与朗读时间戳配方生成器 (audio-cue.mjs)
+ *
+ * 自动从微诗 Voicebox 朗读音频库 (/Volumes/XiPass/literature/assets/wish/audio/poetryhub-voicebox-readings)
+ * 检索诗作，读取 reading_voicebox_male.mp3 与 timed_lyrics.json，通过 ffprobe 测量音频总时长，
+ * 自动生成可直接交给 render.mjs 渲染的声画同步 Recipe JSON。
+ *
+ * 用法：
+ *   node tools/video-studio/bin/audio-cue.mjs --query "杜甫-晚晴" --out tools/video-studio/recipes/auto-wanqing.json
+ *   node tools/video-studio/bin/audio-cue.mjs --list "苏轼"
+ */
+
+import fs from 'node:fs';
+import path from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { ASSETS_ROOT, STUDIO_ROOT } from './server-util.mjs';
+
+const args = process.argv.slice(2);
+const getArg = (k, def) => {
+  const idx = args.indexOf(`--${k}`);
+  return idx >= 0 && args[idx + 1] ? args[idx + 1] : def;
+};
+
+const externalReadingsDir = path.join(ASSETS_ROOT, 'wish/audio/poetryhub-voicebox-readings/2026-06-22');
+const bundledReadingsDir = path.join(STUDIO_ROOT, 'assets/readings');
+const READINGS_DIR =
+  process.env.WEISHI_READINGS_DIR ||
+  (fs.existsSync(externalReadingsDir) ? externalReadingsDir : bundledReadingsDir);
+
+function probeDuration(filePath) {
+  try {
+    const out = execFileSync(
+      'ffprobe',
+      ['-v', 'error', '-show_entries', 'format=duration', '-of', 'default=noprint_wrappers=1:nokey=1', filePath],
+      { encoding: 'utf-8' }
+    );
+    return Math.ceil(parseFloat(out.trim()) || 18);
+  } catch {
+    return 18;
+  }
+}
+
+const listKeyword = getArg('list', '');
+if (listKeyword) {
+  const dirs = fs.readdirSync(READINGS_DIR).filter((d) => d.includes(listKeyword));
+  console.log(`匹配的 Voicebox 朗读条目 (${dirs.length} 首):`);
+  dirs.slice(0, 30).forEach((d) => console.log(`  - ${d}`));
+  process.exit(0);
+}
+
+const query = getArg('query', '杜甫-晚晴');
+const tokens = query.split(/[\s-]+/).filter(Boolean);
+const dirs = fs.readdirSync(READINGS_DIR);
+const matched = dirs.find((d) => tokens.every((tk) => d.includes(tk)));
+if (!matched) {
+  console.error(`未在 ${READINGS_DIR} 中找到匹配 "${query}" 的诗作朗读目录`);
+  process.exit(1);
+}
+
+const folder = path.join(READINGS_DIR, matched);
+const textRaw = fs.readFileSync(path.join(folder, 'text.txt'), 'utf-8').trim().split(/\r?\n/);
+const title = (textRaw[0] || '').trim();
+const authorLine = (textRaw[1] || '').trim();
+const author = authorLine.split(/\s+/)[0] || '佚名';
+const timed = JSON.parse(fs.readFileSync(path.join(folder, 'timed_lyrics.json'), 'utf-8'));
+const mp3Path = path.join(folder, 'reading_voicebox_male.mp3');
+const dur = probeDuration(mp3Path);
+const poemId = matched.split('-').pop() || matched;
+
+const couplets = timed.map((item, idx) => {
+  const nextStart = timed[idx + 1] ? timed[idx + 1].start - 0.05 : dur;
+  return {
+    start: Number(item.start),
+    end: Number(nextStart.toFixed(2)),
+    text: item.text,
+    inscribeTitle: `第${['一', '二', '三', '四', '五', '六', '七', '八'][idx] || idx + 1}联 · 声画同步`,
+    inscribeNote: item.text,
+  };
+});
+
+const slug = `auto-${matched.split('-').slice(1, 3).join('-')}`;
+const recipe = {
+  id: slug,
+  poemId,
+  title,
+  dynasty: '唐宋',
+  author,
+  term: '时令',
+  mood: '旷达',
+  weather: 'mist',
+  location: '微诗 · 声画同步朗读',
+  duration: dur,
+  audioMode: 'voice+bgm+foley',
+  voice: `/assets/wish/audio/poetryhub-voicebox-readings/2026-06-22/${matched}/reading_voicebox_male.mp3`,
+  bgm: '/artifacts/promo-8.0/assets/audio/radio-calm.m4a',
+  seal: '微詩',
+  lines: couplets.map((c) => c.text),
+  procedural: {
+    generator: 'shanshui@2',
+    seed: matched,
+    variant: '远山',
+    params: {
+      density: 0.88,
+      quiet_top: 0.4,
+      verse_side: 'left',
+      verse_columns: Math.min(6, Math.max(2, couplets.length)),
+      verse_chars: 10,
+    },
+  },
+  couplets,
+};
+
+const outFile = path.resolve(getArg('out', path.join(STUDIO_ROOT, 'recipes', `${slug}.json`)));
+fs.writeFileSync(outFile, JSON.stringify(recipe, null, 2) + '\n', 'utf-8');
+console.log(`已从 Voicebox 朗读库生成声画对齐配方: ${outFile} (总时长 ${dur}s, 共 ${couplets.length} 联)`);
+
