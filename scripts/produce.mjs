@@ -109,7 +109,10 @@ async function main() {
   fs.mkdirSync(outDir, { recursive: true });
 
   const slug = args.slug || makeSlug(`auto-${args.style}-${args.query}`);
-  const recipePath = path.join(STUDIO_ROOT, 'recipes', `${slug}.json`);
+  const recipeDir = fs.existsSync(path.join(STUDIO_ROOT, 'resources/recipes'))
+    ? path.join(STUDIO_ROOT, 'resources/recipes')
+    : path.join(STUDIO_ROOT, 'recipes');
+  const recipePath = path.join(recipeDir, `${slug}.json`);
 
   console.log(`\n🎬 [1/4] 音频先行对齐: 检索「${args.query}」并生成导演配方...`);
   execFileSync(

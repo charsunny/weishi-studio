@@ -1,9 +1,12 @@
 /**
- * 微诗视频工作台 · 静态资源服务器与 Puppeteer 发现工具
+ * 微诗视频工作台 · 静态资源服务器与 Puppeteer 发现工具 (server-util.mjs)
  *
  * 自动映射：
- * - /vendor/zxart/* -> <repoRoot>/web/public/vendor/zxart/* (ZixiaoArt Web Worker)
- * - 其余路径 -> <repoRoot>/* (fonts/, tools/video-studio/, artifacts/, etc.)
+ * - /workbench 或 / -> <STUDIO_ROOT>/resources/workbench.html
+ * - /tools/video-studio/<subpath> -> <STUDIO_ROOT>/resources/<subpath> (兼容旧路径与独立技能路径)
+ * - /resources/<subpath> -> <STUDIO_ROOT>/resources/<subpath>
+ * - /vendor/zxart/* -> <STUDIO_ROOT>/resources/vendor/zxart/* -> <repoRoot>/web/public/vendor/zxart/*
+ * - /assets/* -> <STUDIO_ROOT>/resources/assets/* -> <WEISHI_ASSETS_ROOT>/*
  */
 
 import http from 'node:http';
@@ -40,35 +43,56 @@ export const ASSETS_ROOT = process.env.WEISHI_ASSETS_ROOT || path.resolve(REPO_R
 export function resolveRepoFile(urlPath) {
   const cleanUrl = decodeURIComponent(urlPath.split('?')[0]);
   if (cleanUrl === '/' || cleanUrl === '/workbench') {
+    const wb = path.join(STUDIO_ROOT, 'resources/workbench.html');
+    if (fs.existsSync(wb)) return wb;
     return path.join(STUDIO_ROOT, 'workbench.html');
   }
   if (cleanUrl.startsWith('/tools/video-studio/')) {
     const sub = cleanUrl.slice('/tools/video-studio/'.length);
+    const inRes = path.join(STUDIO_ROOT, 'resources', sub);
+    if (fs.existsSync(inRes)) return inRes;
     const localFp = path.join(STUDIO_ROOT, sub);
     if (fs.existsSync(localFp)) return localFp;
   }
+  if (cleanUrl.startsWith('/resources/')) {
+    const sub = cleanUrl.slice('/resources/'.length);
+    const inRes = path.join(STUDIO_ROOT, 'resources', sub);
+    if (fs.existsSync(inRes)) return inRes;
+  }
   if (cleanUrl.startsWith('/vendor/zxart/')) {
     const sub = cleanUrl.slice('/vendor/zxart/'.length);
+    const inRes = path.join(STUDIO_ROOT, 'resources/vendor/zxart', sub);
+    if (fs.existsSync(inRes)) return inRes;
     const bundled = path.join(STUDIO_ROOT, 'vendor/zxart', sub);
     if (fs.existsSync(bundled)) return bundled;
     return path.join(REPO_ROOT, 'web/public/vendor/zxart', sub);
   }
   if (cleanUrl.startsWith('/artifacts/promo-8.0/assets/audio/')) {
     const sub = cleanUrl.slice('/artifacts/promo-8.0/assets/audio/'.length);
+    const inRes = path.join(STUDIO_ROOT, 'resources/assets/audio', sub);
+    if (fs.existsSync(inRes)) return inRes;
     const bundled = path.join(STUDIO_ROOT, 'assets/audio', sub);
     if (fs.existsSync(bundled)) return bundled;
   }
   if (cleanUrl.startsWith('/assets/wish/audio/poetryhub-voicebox-readings/2026-06-22/')) {
     const sub = cleanUrl.slice('/assets/wish/audio/poetryhub-voicebox-readings/2026-06-22/'.length);
+    const inRes = path.join(STUDIO_ROOT, 'resources/assets/readings', sub);
+    if (fs.existsSync(inRes)) return inRes;
     const bundled = path.join(STUDIO_ROOT, 'assets/readings', sub);
     if (fs.existsSync(bundled)) return bundled;
   }
   if (cleanUrl.startsWith('/assets/')) {
     const sub = cleanUrl.slice('/assets/'.length);
+    const inRes = path.join(STUDIO_ROOT, 'resources/assets', sub);
+    if (fs.existsSync(inRes)) return inRes;
     const bundled = path.join(STUDIO_ROOT, 'assets', sub);
     if (fs.existsSync(bundled)) return bundled;
     const assetFp = path.join(ASSETS_ROOT, sub);
     if (fs.existsSync(assetFp)) return assetFp;
+  }
+  const inRes = path.join(STUDIO_ROOT, 'resources', cleanUrl);
+  if (fs.existsSync(inRes) && !fs.statSync(inRes).isDirectory()) {
+    return inRes;
   }
   const studioCandidate = path.join(STUDIO_ROOT, cleanUrl);
   if (fs.existsSync(studioCandidate) && !fs.statSync(studioCandidate).isDirectory()) {
@@ -159,11 +183,18 @@ export function findChromeExecutable() {
 export function normalizeSceneUrl(sceneArg = 'huaping-motion', recipeArg = '') {
   let url = sceneArg;
   if (!url.startsWith('/') && !url.includes('.html')) {
-    url = `/tools/video-studio/templates/${url}/index.html`;
+    const inRes = path.join(STUDIO_ROOT, `resources/templates/${url}/index.html`);
+    if (fs.existsSync(inRes)) {
+      url = `/resources/templates/${url}/index.html`;
+    } else {
+      url = `/tools/video-studio/templates/${url}/index.html`;
+    }
   } else if (!url.startsWith('/')) {
     const abs = path.resolve(process.cwd(), url);
     if (abs.startsWith(REPO_ROOT)) {
       url = '/' + path.relative(REPO_ROOT, abs).replace(/\\/g, '/');
+    } else if (abs.startsWith(STUDIO_ROOT)) {
+      url = '/' + path.relative(STUDIO_ROOT, abs).replace(/\\/g, '/');
     } else {
       url = '/' + url;
     }

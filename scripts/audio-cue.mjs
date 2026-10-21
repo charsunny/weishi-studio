@@ -23,7 +23,9 @@ const getArg = (k, def) => {
 };
 
 const externalReadingsDir = path.join(ASSETS_ROOT, 'wish/audio/poetryhub-voicebox-readings/2026-06-22');
-const bundledReadingsDir = path.join(STUDIO_ROOT, 'assets/readings');
+const bundledReadingsDir = fs.existsSync(path.join(STUDIO_ROOT, 'resources/assets/readings'))
+  ? path.join(STUDIO_ROOT, 'resources/assets/readings')
+  : path.join(STUDIO_ROOT, 'assets/readings');
 const READINGS_DIR =
   process.env.WEISHI_READINGS_DIR ||
   (fs.existsSync(externalReadingsDir) ? externalReadingsDir : bundledReadingsDir);
@@ -111,7 +113,10 @@ const recipe = {
   couplets,
 };
 
-const outFile = path.resolve(getArg('out', path.join(STUDIO_ROOT, 'recipes', `${slug}.json`)));
+const defaultRecipeDir = fs.existsSync(path.join(STUDIO_ROOT, 'resources/recipes'))
+  ? path.join(STUDIO_ROOT, 'resources/recipes')
+  : path.join(STUDIO_ROOT, 'recipes');
+const outFile = path.resolve(getArg('out', path.join(defaultRecipeDir, `${slug}.json`)));
 fs.writeFileSync(outFile, JSON.stringify(recipe, null, 2) + '\n', 'utf-8');
 console.log(`已从 Voicebox 朗读库生成声画对齐配方: ${outFile} (总时长 ${dur}s, 共 ${couplets.length} 联)`);
 

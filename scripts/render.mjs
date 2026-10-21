@@ -26,7 +26,7 @@ import {
   findChromeExecutable,
   normalizeSceneUrl,
 } from './server-util.mjs';
-import { renderFoleyWav } from '../core/foley.mjs';
+import { renderFoleyWav } from '../resources/core/foley.mjs';
 
 const args = process.argv.slice(2);
 const hasFlag = (k) => args.includes(`--${k}`);

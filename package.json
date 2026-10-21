@@ -1,18 +1,20 @@
 {
-  "name": "weishi-video-studio",
+  "name": "weishi-studio",
   "version": "1.0.0",
-  "description": "微诗视频工作台 (Weishi Video Studio) — Deterministic Oriental-aesthetics & Chinese classical poetry video production studio and AI Agent Skill.",
+  "description": "微诗工作台 (Weishi Studio) — Deterministic Oriental-aesthetics & Chinese classical poetry visual and video production AI Agent Skill.",
   "type": "module",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/charsunny/weishi-video-studio.git"
+    "url": "https://github.com/charsunny/weishi-studio.git"
   },
   "keywords": [
     "agent-skill",
     "claude-skill",
     "openclaw",
     "antigravity",
+    "cursor-skill",
+    "weishi-studio",
     "chinese-poetry",
     "shanshui",
     "zixiao-art",
@@ -20,18 +22,19 @@
     "ink-wash"
   ],
   "bin": {
-    "weishi-preview": "./bin/preview.mjs",
-    "weishi-render": "./bin/render.mjs",
-    "weishi-readcheck": "./bin/readcheck.mjs",
-    "weishi-audio-cue": "./bin/audio-cue.mjs",
-    "weishi-produce": "./bin/produce.mjs"
+    "weishi-studio": "./scripts/produce.mjs",
+    "weishi-preview": "./scripts/preview.mjs",
+    "weishi-render": "./scripts/render.mjs",
+    "weishi-readcheck": "./scripts/readcheck.mjs",
+    "weishi-audio-cue": "./scripts/audio-cue.mjs",
+    "weishi-produce": "./scripts/produce.mjs"
   },
   "scripts": {
-    "preview": "node bin/preview.mjs",
-    "render": "node bin/render.mjs",
-    "readcheck": "node bin/readcheck.mjs",
-    "audio-cue": "node bin/audio-cue.mjs",
-    "produce": "node bin/produce.mjs"
+    "preview": "node scripts/preview.mjs",
+    "render": "node scripts/render.mjs",
+    "readcheck": "node scripts/readcheck.mjs",
+    "audio-cue": "node scripts/audio-cue.mjs",
+    "produce": "node scripts/produce.mjs"
   },
   "dependencies": {
     "puppeteer-core": "^24.0.0"
