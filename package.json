@@ -23,6 +23,7 @@
   ],
   "bin": {
     "weishi-studio": "./scripts/produce.mjs",
+    "weishi-generate": "./scripts/generate.mjs",
     "weishi-preview": "./scripts/preview.mjs",
     "weishi-render": "./scripts/render.mjs",
     "weishi-readcheck": "./scripts/readcheck.mjs",
@@ -30,6 +31,7 @@
     "weishi-produce": "./scripts/produce.mjs"
   },
   "scripts": {
+    "generate": "node scripts/generate.mjs",
     "preview": "node scripts/preview.mjs",
     "render": "node scripts/render.mjs",
     "readcheck": "node scripts/readcheck.mjs",

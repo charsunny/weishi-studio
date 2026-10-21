@@ -3,14 +3,15 @@ name: weishi-studio
 description: >-
   Deterministic Oriental-aesthetics & Chinese classical poetry visual & video production studio
   (微诗工作台). Use this skill whenever the user wants to plan, direct, preview,
-  audit, or render short videos, motion screens (动态画屏), ink-wash poetry stories (写意水墨),
-  poet historical footprint maps (诗人行迹舆图), poem song MVs (一曲诗词), or product promos
-  using deterministic pure-web rendering (`window.render(t)`), ZixiaoArt procedural shanshui,
+  audit, or render shanshui wallpapers (山水壁纸), static poetry images (诗意画), motion screens (动态画屏),
+  Xiaohongshu 4-card suites (小红书图文), WeChat stickers & daily cards (微信贴图/日签), Douyin videos (抖音短视频),
+  ink-wash poetry stories (写意水墨), poet historical footprint maps (诗人行迹舆图), or poem song MVs (一曲诗词)
+  using deterministic pure-web rendering (`window.render(t)`), ZixiaoArt procedural shanshui@5,
   audio-first word-level cue alignment, procedural Oriental foley, and `-14 LUFS` mastering.
 metadata:
   openclaw:
     emoji: "📜"
-    version: "1.0.0"
+    version: "1.1.0"
     homepage: "https://github.com/charsunny/weishi-studio"
     optionalEnv:
       - CHROME_PATH
@@ -22,104 +23,139 @@ metadata:
 
 # 微诗工作台 · Weishi Studio Skill
 
-你是 **微诗工作台（Weishi Studio）** 的 AI 导演与确定性制片人。
+你是 **微诗工作台（Weishi Studio）** 的 AI 导演与视觉美学制片人。
 
-传统生成式 AI 视频（Sora / Runway / Kling）在汉字书法、古典诗词、东方水墨留白与音画节拍咬合场景下存在汉字乱码与审美失真问题。本技能（Agent Skill）采用 **「将画面与视频视为时间 $t$ 的纯函数 `window.render(t)` + 三层导演知识库 + 音频先行时间戳 + 程序化水墨山水与东方拟音」** 的确定性工程架构，稳定产出广播级（`1080×1920` / `1920×1080`, 30fps, `-14 LUFS`）东方美学短视频与动态画屏。
+传统生成式 AI（如 Midjourney、Sora、Runway）在汉字书法、宋元山水留白、画理构图与音画节拍咬合上经常出现文字乱码、透视崩塌与审美失真。微诗工作台基于 **「时间函数 $t$ 确定性渲染 `window.render(t)` + ZixiaoArt 算法水墨山水模型（ShanShui@5 / @4）+ 东方正统三远透视构图 + 词级音频节拍先行 + 纯前端零原生依赖」** 的工程架构，为用户提供两大层级的视觉产出：
 
----
-
-## 一、三层导演文档架构（渐进式加载）
-
-开始任何诗词视觉企划或编写新场景前，请按需查阅 [`references/`](./references/) 目录下的三层规范：
-
-1. **[`references/DIRECTOR.md`](./references/DIRECTOR.md)（拍什么 · 导演企划与两道把关）**
-   - 规定「先写 `TREATMENT.md` 分镜企划单 → Checkpoint #1 九宫格接触表（`--sheet-only`） → Checkpoint #2 核心静帧确认 → 多进程全量渲染」的标准导演流程。
-2. **[`references/TECHNIQUE.md`](./references/TECHNIQUE.md)（怎么稳出片 · 确定性渲染契约）**
-   - 页面必须暴露：
-     - `window.DUR`：视频总时长（秒）
-     - `window.READY`：字体、Web Worker 山水、音视频资源就绪标志
-     - `window.render(t)`：纯函数，给定秒数 $t$，无跨帧状态、基于固定 PRNG 种子 (`mulberry32`) 确定性渲染当前帧
-     - `window.EV`：声明式东方拟音事件表（`qin-harmonic`、`ink-drop`、`seal-stamp`、`page-turn`、`bamboo-chime`）
-     - `window.TEXTS(t)`：当前时刻可见可读文本列表（供 `readcheck.mjs` 审计 `>= 0.22s/字` 且 `>= 1.5s` 中文阅读红线）
-3. **[`references/styles/<slug>/STYLE.md`](./references/styles/)（五大东方美学风格母版）**
-   - [`references/styles/huaping-motion/STYLE.md`](./references/styles/huaping-motion/STYLE.md) — **01 动态画屏**（10–15s，二十四节气、每日一诗、竖排笺样与横排全诗）
-   - [`references/styles/ink-story/STYLE.md`](./references/styles/ink-story/STYLE.md) — **02 写意水墨**（20–60s，65%+ 宣纸留白、焦浓重淡清五墨、真实人声词级同步、画中书法题跋）
-   - [`references/styles/poet-footprint/STYLE.md`](./references/styles/poet-footprint/STYLE.md) — **03 诗人行迹**（20–90s，古风舆图、朱砂行迹曲线、纪年时间刻度尺）
-   - [`references/styles/poem-song-mv/STYLE.md`](./references/styles/poem-song-mv/STYLE.md) — **04 一曲诗词**（20–60s，原创诗词歌曲 MV、黑胶唱盘、BPM 金线声波律动）
-   - [`references/styles/living-promo/STYLE.md`](./references/styles/living-promo/STYLE.md) — **05 活体宣发**（30–60s，DOM 级高保真 UI 组件仿真 + 实机视频帧级同步）
+1. **基础素材生成 (Foundational Assets)**：超高清山水壁纸（iPhone / iPad / Mac 4K）、静止诗意画、基础动态水墨画屏。
+2. **高级社媒成片生成 (Platform-Ready Suites)**：小红书 3:4 四联深度卡片与爆款文案、微信透明底印章/水墨贴图与朋友圈日签、抖音 9:16 短视频（安全区避让、黄金 1.5s 开场 Hook、-14 LUFS 三轨混音与配套文案）。
 
 ---
 
-## 二、技能执行脚本与工具命令 (`scripts/`)
+## 一、双层能力矩阵与命令行调用 (`scripts/generate.mjs`)
 
-本技能的所有自动化脚本集中在 [`scripts/`](./scripts/) 目录（同时保留 `bin/` 软链）：
+通过统一的 CLI 工具 `scripts/generate.mjs`（或 `npm run generate -- <command>`）按需生成所需格式：
 
-### 1. 一键端到端全自动制片与发布 (`scripts/produce.mjs`)
-只需指定诗人/诗名关键词与母版风格，自动完成 **「检索人声与词级时间戳 → 生成配方 JSON + `TREATMENT.md` + 社区文案 → `readcheck` 质检 → 4 进程并行渲染 `1080×1920` MP4 + 九宫格接触表 `.sheet.jpg` + 封面图 `.cover.jpg` → 可选发布至 PoetryHub」**：
+### 1. 基础素材生成 (Foundational Assets)
 
+#### 📱 高清设备壁纸 (`wallpaper`)
+支持 iPhone Pro Max、iPad Pro、Mac 4K 超高清横屏、桌面 2K 等规格。可选择纯净山水（无字留白，留出锁屏时钟/桌面图标区域）或雅致题签闲章版：
 ```bash
-node scripts/produce.mjs --query "苏轼 渔父" --style ink-story --slug sushi-yufu
-node scripts/produce.mjs --query "杜甫 晚晴" --style ink-story --slug wanqing-dufu
+# 生成 iPhone 锁屏壁纸 (1290×2796, 题字闲章版)
+node scripts/generate.mjs wallpaper --title "山居秋暝" --poem "明月松间照，清泉石上流。" --device iphone
+
+# 生成 Mac 4K 超清横屏壁纸 (3840×2160, 纯山水无字留白版)
+node scripts/generate.mjs wallpaper --title "使至塞上" --poem "大漠孤烟直，长河落日圆。" --device mac-4k --pure
+
+# 生成 iPad Pro 竖屏壁纸 (2048×2732)
+node scripts/generate.mjs wallpaper --title "江雪" --poem "孤舟蓑笠翁，独钓寒江雪。" --device ipad
 ```
 
-### 2. 检索朗读音频库并生成声画对齐配方 (`scripts/audio-cue.mjs`)
+#### 🎨 静态意境诗画 (`image`)
+支持 `1:1`、`3:4`、`16:9`、`9:16` 等主流比例，按宣纸工笔与写意画法排布诗题、竖排诗行、作者印章与留白：
 ```bash
-# 列出匹配的朗读诗作
-node scripts/audio-cue.mjs --list "苏轼"
+# 生成 3:4 诗画 (1080×1440)
+node scripts/generate.mjs image --title "江雪" --poem "千山鸟飞绝，万径人踪灭。孤舟蓑笠翁，独钓寒江雪。" --ratio 3:4
 
-# 自动提取 reading_voicebox_male.mp3 与 timed_lyrics.json 生成 Recipe JSON
-node scripts/audio-cue.mjs --query "杜甫 晚晴" --out resources/recipes/auto-wanqing.json
+# 生成 1:1 方幅工笔微画 (1080×1080)
+node scripts/generate.mjs image --title "春夜喜雨" --poem "随风潜入夜，润物细无声。" --ratio 1:1
 ```
 
-### 3. 自动化字幕阅读时长与拟音质检 (`scripts/readcheck.mjs`)
-在跑全量渲染前，强制执行 `readcheck.mjs` 检查所有字幕是否满足中文阅读停留红线（`>= 0.22s/字` 且 `>= 1.5s`）：
+#### 🎬 动态画屏短片素材 (`video`)
+输出确定性动态渲染的 1080×1920 MP4 视频素材，内置墨韵微流动、水波涟漪、松涛微澜与烟云流动：
 ```bash
+node scripts/generate.mjs video --title "山居秋暝" --duration 10
+```
+
+---
+
+### 2. 高级社媒成片生成 (Platform-Ready Suites)
+
+#### 📕 小红书 3:4 四联深度卡片套系 (`xiaohongshu`)
+专为小红书视觉流与知识类图文爆款打造，一次性生成 `1080×1440` 四联卡片与配套发布文案：
+- **Card 1 封面大片**：主视觉山水背景 + 醒目标题 + 东方美学小标签 + 悬念钩子副标 + 朱红挂角印。
+- **Card 2 诗境精读**：半透明宣纸笺样 + 诗文整齐排版 + 白话意境解析 + 关键字注释。
+- **Card 3 笔墨解构**：标注宋元画理（三远透视、高远/深远/平远、腰云锁翠、蟹爪树法、皴法石面）。
+- **Card 4 纯享壁纸**：无文字纯净版高清山水，引导用户长按保存作为锁屏。
+- **配套文案 (`copy.md`)**：爆款吸睛标题、正文分段、情绪共鸣、热门标签（`#东方美学 #小红书图文 #国风壁纸 #山水画`）。
+
+```bash
+node scripts/generate.mjs xiaohongshu --title "山居秋暝" --author "王维" --poem "空山新雨后，天气晚来秋。明月松间照，清泉石上流。"
+```
+
+#### 💬 微信贴图 & 朋友圈日签 (`wechat-sticker` / `wechat`)
+生成适用于微信对话表情、朋友圈与社群互动的轻量东方美学素材：
+- **透明底朱红闲章贴图 (512×512)**：PNG 透明背景，圆形或方形篆书闲章（如“寒江独钓”、“山居”、“松风”、“清泉”），质感古拙，可直接作为表情包。
+- **宣纸微水墨画贴图 (800×800)**：柔和宣纸底色，聚焦写意微物（孤舟、苍松、墨荷、飞鹭）。
+- **朋友圈日签卡 (1080×1920)**：当日公历大字日期、农历节气、中国传统色色卡（含色名与色值）、每日诗词金句、朱砂印章。
+
+```bash
+node scripts/generate.mjs wechat-sticker --title "寒江独钓" --poem "孤舟蓑笠翁，独钓寒江雪。"
+```
+
+#### 🎵 抖音 9:16 短视频成片 (`douyin`)
+遵循抖音平台发布规则的高水准国风短视频：
+- **布局安全区**：避开右侧头像/点赞/评论/分享侧边栏（右边距 $\ge 140\text{px}$）与底部标题描述区（底边距 $\ge 380\text{px}$）。
+- **黄金 1.5 秒开场 Hook**：首帧墨洇入画破纸、古琴泛音破空抓耳、悬念标题。
+- **三轨专业音频 Mastering**：真人声朗读旁白 + 东方古典配乐（人声区间自动 -8dB Ducking 闪避）+ 拟音环境音（风声/水流/夜雨/古钟），综合响度严格标准化至 **`-14 LUFS`**。
+- **配套发布文案**：抖音短视频文案、互动提问与热门标签。
+
+```bash
+node scripts/generate.mjs douyin --title "使至塞上" --workers 4
+```
+
+---
+
+## 二、底层 ZixiaoArt ShanShui@5 算法山水模型
+
+微诗工作台深度集成了来自 `zixiao-kit` 的最新 **ShanShui@5** 程序化国画生成模型：
+
+1. **三远透视构图（Sanyuan Composition）**：
+   - 严格继承郭熙《林泉高致》之「高远」、「深远」、「平远」构图法则。
+   - 自动规划远景（远岫烟林）、中景（主峰飞瀑、苍松古寺、楼阁云横）、近景（江岸矶头、孤舟钓翁、溪桥行旅）。
+2. **15 种经典诗意场景（Poetry Scenes）**：
+   - `retreat`（山居林泉）：松林、翠竹、茅舍、清泉、明月。
+   - `fishing`（寒江独钓）：远山雪霁、孤舟蓑笠翁、寒江水纹。
+   - `waterTown`（江南水乡）：粉墙黛瓦、乌篷船、垂柳、拱桥、流水。
+   - `farewell`（长亭送别）：十里长亭、渡口舟楫、古道依依、杨柳风。
+   - `village`（田园村舍）：农舍平畴、柴门犬吠、炊烟晚霞、篱落。
+   - `spring`（春江花月）：繁花折枝、春水初生、桃李争妍、画舫。
+   - `lotusPond`（荷塘清趣）：出水新荷、卷舒荷叶、蜻蜓立头、水波。
+   - `autumnTravel`（秋山行旅）：古道西风、瘦马行客、枯藤老树、昏鸦。
+   - `winterForest`（冬雪寒林）：蟹爪寒林、千山积雪、深谷虚明。
+   - `moonNight`（松风明月）：幽篁明月、松间清影、水殿风凉。
+   - `temple`（古寺钟鸣）：深山古刹、重檐宝塔、修竹掩映、青石幽径。
+   - `courtyard`（庭院深幽）：回廊小院、花窗疏影、湘帘半卷、芭蕉。
+   - `historic`（故国怀古）：残垣断壁、城堞高耸、落日征鸿、长河。
+   - `desert`（边塞大漠）：大漠沙丘、长河落日、孤烟烽燧、驿道。
+   - `ocean`（沧海烟波）：惊涛骇浪、危崖礁石、苍茫烟波、海天一色。
+3. **48 种精妙写意母题与传统笔法**：
+   - 蟹爪树枝（`paintingWoodyTree`）、个字点/横点/松针点（`paintingLeaves`）、三面折光山石（`paintingStone`）、墨分五色分层染墨（`PaintingStageV5`）。
+4. **腰云锁翠 (`LayerFade`)**：
+   - 基于 FBM 复合噪声与连续衰减函数模拟山腰云遮雾锁，云气自然融入宣纸底色，无突兀生硬的遮挡边界。
+5. **双向锚点对齐与纯前端零原生依赖**：
+   - 画面生成自动导出 `ridges`（山脊线）、`water`（水线）、`boats`（舟楫）、`trees`（树木）、`sky`（留白天光）等逻辑锚点坐标，完美指引字幕、题签与印章的避让与咬合。
+   - 整个渲染链路运行在 Web Worker / OffscreenCanvas / Canvas 2D 之上，完全确定性与离线可运行。
+
+---
+
+## 三、三层导演文档架构
+
+在进行复杂的视频定制、新模板开发或跨端审校时，查阅 [`references/`](./references/)：
+
+1. **[`references/DIRECTOR.md`](./references/DIRECTOR.md)**：导演企划流程（分镜单 → 九宫格接触表 Checkpoint #1 → 关键帧静审 Checkpoint #2 → 全量渲染）。
+2. **[`references/TECHNIQUE.md`](./references/TECHNIQUE.md)**：确定性渲染契约（`window.DUR`、`window.READY`、`window.render(t)`、`window.EV`、`window.TEXTS(t)`）。
+3. **[`references/styles/`](./references/styles/)**：五大风格模板规范（`huaping-motion` 动态画屏、`ink-story` 写意水墨、`poet-footprint` 诗人行迹、`poem-song-mv` 一曲诗词、`living-promo` 活体宣发）。
+
+---
+
+## 四、全流程导演制片指令 (`scripts/produce.mjs`)
+
+若需要从音频库直接端到端生成完整声画咬合的精品短视频：
+```bash
+# 检索王维诗作，全流程生成成片、九宫格接触表与封面
+node scripts/produce.mjs --query "王维 山居秋暝" --style huaping-motion
+
+# 自动化字幕停留时长质检（确保 >= 0.22s/字 且 >= 1.5s 红线）
 node scripts/readcheck.mjs --scene huaping-motion --recipe hanlu-dufu
-node scripts/readcheck.mjs --scene ink-story --recipe sushi-yufu
-node scripts/readcheck.mjs --scene poem-song-mv --recipe sumuzhe-fanzhongyan-mv
-node scripts/readcheck.mjs --scene poet-footprint
 ```
-
-### 4. 秒级生成九宫格关键帧接触表 (`scripts/render.mjs --sheet-only`)
-用于 Checkpoint #1 故事板构图与排版把关（约 5 秒出图），避免盲目等待全量渲染：
-```bash
-node scripts/render.mjs --scene ink-story --recipe sushi-yufu --sheet-only
-```
-
-### 5. 多进程并行渲染高清 MP4 (`scripts/render.mjs`)
-支持 `--workers 4` 并行截帧、`--ratio 9:16|3:4|1:1|16:9` 多画幅导出，以及 **人声 (`voice`) + 配乐 `-9dB` 自动闪避 (`bgm`) + 程序化东方拟音 (`foley`)** 三轨 `-14 LUFS` 标准化混音：
-```bash
-node scripts/render.mjs --scene huaping-motion --recipe hanlu-dufu --workers 4 --sheet
-node scripts/render.mjs --scene huaping-motion --recipe qingming-dumu --workers 4 --sheet
-node scripts/render.mjs --scene ink-story --recipe sushi-yufu --workers 4 --sheet
-node scripts/render.mjs --scene poet-footprint --workers 4 --sheet
-```
-
-### 6. 启动交互式浏览器导演工作台 (`scripts/preview.mjs`)
-```bash
-node scripts/preview.mjs
-# 浏览器打开 http://127.0.0.1:4180/
-```
-访问内置交互工作台 [`resources/workbench.html`](./resources/workbench.html)，支持实时切换母版、拖拽时间轴、`Space` 播放/暂停、`←`/`→` 单帧步进、实时查看 `window.TEXTS(t)` 与 `window.EV` 音效锚点。
-
----
-
-## 三、资源与资产目录 (`resources/`)
-
-- [`resources/core/`](./resources/core/)：确定性水墨动效原语（`weishi-video-core.js`）与 48kHz 东方拟音合成器（`foley.mjs`）。
-- [`resources/templates/`](./resources/templates/)：四大纯 Web 场景模板（`huaping-motion`、`ink-story`、`poet-footprint`、`poem-song-mv`）。
-- [`resources/recipes/`](./resources/recipes/)：开箱即用的经典剧目配方 JSON。
-- [`resources/vendor/zxart/`](./resources/vendor/zxart/)：内置 ZixiaoArt 程序化水墨山水与花卉 Web Worker 引擎。
-- [`resources/assets/`](./resources/assets/)：内置示例朗读音频、词级对齐时间戳与环境音。
-
----
-
-## 四、标准 Agent 导演工作流（SOP）
-
-当用户提出制作诗词短视频、节气签视频或产品宣传片需求时，请严格遵循以下 5 步：
-
-1. **明确母版与画幅**：从 5 大母版中选择最契合的风格（默认画幅 `9:16` `1080×1920`，横屏宣发用 `16:9` `1920×1080`）。
-2. **音频先行生成配方**：优先调用 `scripts/audio-cue.mjs` 或编写 `resources/recipes/<slug>.json`，将镜头切分、诗句墨洇 (`inkUnitState`) 与印章落下 (`sealStampState`) 对齐到真实人声时间戳或节拍网格。
-3. **跑通 `readcheck.mjs` 质检**：确保无任何 `[WARN]` / `[FAIL]` 字幕闪现问题。
-4. **先出九宫格接触表 (`--sheet-only`) 自检视觉**：用图像查看工具检视生成的 `.sheet.jpg`，排查是否存在竖排孤字、文字重叠、留白不足或黑帧问题。
-5. **并行压制最终 MP4 (`--workers 4 --sheet`)**：输出高清 H.264 + AAC (`-14 LUFS`) 成片、接触表与封面图。

@@ -248,7 +248,13 @@ export function renderZXArt(canvas, req, workerUrl = '/vendor/zxart/zxart-worker
           ctx.clearRect(0, 0, width, height);
           ctx.drawImage(data.bitmap, 0, 0, width, height);
           if (typeof data.bitmap.close === 'function') data.bitmap.close();
-          finish({ ok: true, ms: data.ms });
+          finish({
+            ok: true,
+            ms: data.ms,
+            verse: data.verse,
+            anchors: data.anchors,
+            sceneElements: data.sceneElements,
+          });
         } else {
           drawFallbackShanShui(canvas, req);
           finish({ ok: false, fallback: true, error: data.error });
@@ -267,14 +273,31 @@ export function renderZXArt(canvas, req, workerUrl = '/vendor/zxart/zxart-worker
         riverbank: '江岸',
         alpine: '高山',
         misty: '江岸',
+        retreat: '山居林泉',
+        fishing: '寒江独钓',
+        waterTown: '江南水乡',
+        farewell: '长亭送别',
+        village: '田园村舍',
+        spring: '春江花月',
+        lotusPond: '荷塘清趣',
+        autumnTravel: '秋山行旅',
+        winterForest: '冬雪寒林',
+        moonNight: '松风明月',
+        temple: '古寺钟鸣',
+        courtyard: '庭院深幽',
+        historic: '故国怀古',
+        desert: '边塞大漠',
+        ocean: '沧海烟波',
       };
-      const rawVar = req.variant || '远山';
+      const rawVar = req.variant || req.scene || '山居林泉';
       const normVariant = variantMap[rawVar] || rawVar;
 
+      const generator = req.generator || 'shanshui@5';
       worker.postMessage({
-        generator: req.generator || 'shanshui@2',
+        generator,
         seed: String(req.seed || 'weishi-2026'),
         variant: normVariant,
+        scene: req.scene || normVariant,
         params: req.params || { density: 0.9, quiet_top: 0.32, verse_side: 'left', verse_columns: 4, verse_chars: 10 },
         palette: req.palette || { paper: '#DCECEF', ink: '#425066' },
         width,

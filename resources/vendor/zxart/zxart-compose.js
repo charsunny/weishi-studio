@@ -240,6 +240,14 @@
       var fog = this.fbm(x * 0.23, y * 2.4, rim.seed ^ 0xC2B2AE35), u = Brush.unit((fog - 0.4) / 0.26);
       return Brush.unit(rim.peakOpacity) * Math.pow(1 + (y - top) / rim.width, -rim.power) * u * u * (3 - 2 * u);
     },
+    fadeKeep: function (fade, x, y) {
+      if (!Number.isFinite(x) || !Number.isFinite(y) || !(fade.bottom > fade.top)) return 1;
+      var span = fade.bottom - fade.top;
+      var seed = (fade.seed >>> 0);
+      var billow = (this.fbm(x * 0.9, 3.7, seed) - 0.5) * span * 0.55 + Math.abs(Math.sin(x * 0.045 + (seed % 97))) * span * 0.18;
+      var t = Brush.unit((y - (fade.top + billow)) / (span * 0.75));
+      return 1 - t * t * (3 - 2 * t);
+    },
   };
 
   // 相对旧首点保存载荷: shifted / placed 只移动骨架, 载荷无需重算。
@@ -2198,9 +2206,9 @@
     };
   }
 
-  /** @2 / shanshui@3: 诗句框 (ZXArt.Procedural.verseLayout(pixelSize:))。@1 → null。 */
+  /** @2 / shanshui@3 / @4 / @5: 诗句框 (ZXArt.Procedural.verseLayout(pixelSize:))。@1 → null。 */
   function verseLayoutFor(generator, params, width, height) {
-    if (!(/@2$/.test(String(generator)) || generator === 'shanshui@3') || !(width >= 1) || !(height >= 1)) return null;
+    if (!(/@2$/.test(String(generator)) || generator === 'shanshui@3' || generator === 'shanshui@4' || generator === 'shanshui@5') || !(width >= 1) || !(height >= 1)) return null;
     var ep = engineParams(params);
     if (!ep.verseSide) return null;
     return verseLayout(ep.verseSide, frameOf(width, height), width / height, ep.quietTop, ep.verseColumns, ep.verseChars);
@@ -2235,6 +2243,42 @@
       base.verse = verseLayoutFor(generator, req.params, req.width, req.height);
       if (!base.verse) throw new Error('unknown verse_side ' + (req.params || {}).verse_side);
     }
+    if (generator === 'shanshui@5') {
+      var verse5 = verseLayoutFor(generator, req.params, req.width, req.height);
+      var req5 = {
+        seed: String(req.seed),
+        width: req.width,
+        height: req.height,
+        scene: req.scene || req.variant || 'retreat',
+        options: (req.params && req.params.scene) || req.options || {},
+        quietTop: ep.quietTop,
+        verse: verse5,
+      };
+      var fn5 = typeof globalThis.generatePoetryPaintingV5 === 'function' ? globalThis.generatePoetryPaintingV5 : root.generatePoetryPaintingV5;
+      if (typeof fn5 !== 'function') throw new Error('shanshui@5 generator not loaded');
+      var res5 = fn5(req5, palette);
+      var drawing5 = res5.drawing;
+      drawing5.trace = res5.trace;
+      return drawing5;
+    }
+    if (generator === 'shanshui@4') {
+      var verse4 = verseLayoutFor(generator, req.params, req.width, req.height);
+      var req4 = {
+        seed: String(req.seed),
+        width: req.width,
+        height: req.height,
+        scene: req.scene || req.variant || 'retreat',
+        options: (req.params && req.params.scene) || req.options || {},
+        quietTop: ep.quietTop,
+        verse: verse4,
+      };
+      var fn4 = typeof globalThis.generatePoetrySceneV4 === 'function' ? globalThis.generatePoetrySceneV4 : root.generatePoetrySceneV4;
+      if (typeof fn4 !== 'function') throw new Error('shanshui@4 generator not loaded');
+      var res4 = fn4(req4, palette);
+      var drawing4 = res4.drawing;
+      drawing4.trace = res4.trace;
+      return drawing4;
+    }
     root.Math.seed(String(req.seed));
     if (generator === 'shanshui@1' || generator === 'shanshui@2' || generator === 'shanshui@3') return generateShanShui(base, palette);
     if (generator === 'nonflowers@1' || generator === 'nonflowers@2') return generateFlowers(base, palette);
@@ -2252,7 +2296,13 @@
     verseLayoutFor: verseLayoutFor,
     makePalette: makePalette,
     parseCss: parseCss,
+    poetryScene: function (text, title) {
+      var fn = typeof globalThis.poetryScene === 'function' ? globalThis.poetryScene : root.poetryScene;
+      return typeof fn === 'function' ? fn(text, title) : null;
+    },
     SCRIPTS: {
+      'shanshui@5': ['zxart-shanshui-v5.js'],
+      'shanshui@4': ['zxart-shanshui-v5.js'],
       'shanshui@3': [
         'shan-shui-inf/0-prng.js', 'shan-shui-inf/1-seed.js', 'shan-shui-inf/2-perlin.js',
         'shan-shui-inf/3-polytools.js', 'shan-shui-inf/4-util.js', 'shan-shui-inf/5-generators.js',

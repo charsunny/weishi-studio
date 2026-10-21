@@ -454,6 +454,7 @@ function drawWashed(ctx, layer, drawing, pw, ph, s, ox, oy) {
         }
         opacity = unitClamp(opacity) * noise.tooth(layer.tooth, drawing.paper, lx, ly);
         if (layer.rim) opacity *= noise.rimKeep(layer.rim, lx, ly);
+        if (layer.fade) opacity *= noise.fadeKeep(layer.fade, lx, ly);
         var index = (row * width + column) * 4, gain = color[3] > 0 ? opacity / color[3] : 0;
         var alphaByte = Math.round(opacity * 255);
         // Swift 写回的是预乘 byte; Canvas putImageData 需要反预乘。
@@ -482,7 +483,7 @@ function render(drawing, pw, ph) {
   var oy = ph / 2 - (drawing.height * s) / 2;
   fillGround(ctx, drawing, pw, ph, s, ox, oy);
   drawing.layers.forEach(function (layer) {
-    if (layer.wash || layer.tooth != null || layer.rim) {
+    if (layer.wash || layer.tooth != null || layer.rim || layer.fade) {
       drawWashed(ctx, layer, drawing, pw, ph, s, ox, oy);
       return;
     }
@@ -527,7 +528,14 @@ self.onmessage = function (event) {
       },
     });
     var bitmap = render(drawing, pw, ph);
-    self.postMessage({ ok: true, bitmap: bitmap, ms: Date.now() - t0 }, [bitmap]);
+    self.postMessage({
+      ok: true,
+      bitmap: bitmap,
+      ms: Date.now() - t0,
+      verse: drawing.verse || null,
+      anchors: drawing.anchors || null,
+      sceneElements: drawing.sceneElements || null
+    }, [bitmap]);
   } catch (error) {
     self.postMessage({ ok: false, error: String((error && error.message) || error) });
   }
