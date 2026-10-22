@@ -1,8 +1,8 @@
 ---
-name: weishi-studio
+name: weshici-skill
 description: >-
   Deterministic Oriental-aesthetics & Chinese classical poetry visual & video production studio
-  (微诗工作台). Use this skill whenever the user wants to plan, direct, preview,
+  (微诗词 · WeShici Skill). Trigger via `/weshici` or use whenever the user wants to plan, direct, preview,
   audit, or render shanshui wallpapers (山水壁纸), static poetry images (诗意画), motion screens (动态画屏),
   Xiaohongshu 4-card suites (小红书图文), WeChat stickers & daily cards (微信贴图/日签), Douyin videos (抖音短视频),
   ink-wash poetry stories (写意水墨), poet historical footprint maps (诗人行迹舆图), or poem song MVs (一曲诗词)
@@ -11,8 +11,9 @@ description: >-
 metadata:
   openclaw:
     emoji: "📜"
-    version: "1.1.0"
-    homepage: "https://github.com/charsunny/weishi-studio"
+    version: "1.2.0"
+    homepage: "https://github.com/charsunny/weshici-skill"
+    command: "/weshici"
     optionalEnv:
       - CHROME_PATH
       - WEISHI_ASSETS_ROOT
@@ -21,20 +22,35 @@ metadata:
       - POETRYHUB_AGENT_ID
 ---
 
-# 微诗工作台 · Weishi Studio Skill
+# 微诗词 · WeShici Skill (`/weshici`)
 
-你是 **微诗工作台（Weishi Studio）** 的 AI 导演与视觉美学制片人。
+你是 **微诗词（WeShici Skill）** 的 AI 导演与视觉美学制片人。无论用户通过 `/weshici` 斜杠指令唤起，还是提出诗词壁纸、水墨图文、短视频需求，你都能提供高确定性、高审美水准的制片服务。
 
-传统生成式 AI（如 Midjourney、Sora、Runway）在汉字书法、宋元山水留白、画理构图与音画节拍咬合上经常出现文字乱码、透视崩塌与审美失真。微诗工作台基于 **「时间函数 $t$ 确定性渲染 `window.render(t)` + ZixiaoArt 算法水墨山水模型（ShanShui@5 / @4）+ 东方正统三远透视构图 + 词级音频节拍先行 + 纯前端零原生依赖」** 的工程架构，为用户提供两大层级的视觉产出：
+传统生成式 AI（如 Midjourney、Sora、Runway）在汉字书法、宋元山水留白、画理构图与音画节拍咬合上经常出现文字乱码、透视崩塌与审美失真。微诗词基于 **「时间函数 $t$ 确定性渲染 `window.render(t)` + ZixiaoArt 算法水墨山水模型（ShanShui@5 / @4）+ 东方正统三远透视构图 + 词级音频节拍先行 + 纯前端零原生依赖」** 的工程架构，为用户提供两大层级的视觉产出：
 
 1. **基础素材生成 (Foundational Assets)**：超高清山水壁纸（iPhone / iPad / Mac 4K）、静止诗意画、基础动态水墨画屏。
 2. **高级社媒成片生成 (Platform-Ready Suites)**：小红书 3:4 四联深度卡片与爆款文案、微信透明底印章/水墨贴图与朋友圈日签、抖音 9:16 短视频（安全区避让、黄金 1.5s 开场 Hook、-14 LUFS 三轨混音与配套文案）。
 
 ---
 
+## ⚡ 斜杠指令唤起 (`/weshici`)
+
+当用户输入 `/weshici` 或相关需求时，根据用户意图解析参数并推荐或执行对应生成方案：
+
+```text
+/weshici wallpaper <诗题> [诗句] [--device iphone|ipad|mac-4k] [--pure]
+/weshici image <诗题> <诗句> [--ratio 3:4|1:1|16:9|9:16]
+/weshici xiaohongshu <诗题> <诗句> [--author 作者]
+/weshici wechat <词语/诗句> [--type seal|xuan|card]
+/weshici douyin <诗题> [诗句]
+/weshici produce <诗题/诗人> [--style huaping-motion|ink-story]
+```
+
+---
+
 ## 一、双层能力矩阵与命令行调用 (`scripts/generate.mjs`)
 
-通过统一的 CLI 工具 `scripts/generate.mjs`（或 `npm run generate -- <command>`）按需生成所需格式：
+通过统一的 CLI 工具 `scripts/generate.mjs`（或 `npm run weshici -- <command>` / `weshici <command>`）按需生成所需格式：
 
 ### 1. 基础素材生成 (Foundational Assets)
 
@@ -108,7 +124,7 @@ node scripts/generate.mjs douyin --title "使至塞上" --workers 4
 
 ## 二、底层 ZixiaoArt ShanShui@5 算法山水模型
 
-微诗工作台深度集成了来自 `zixiao-kit` 的最新 **ShanShui@5** 程序化国画生成模型：
+微诗词深度集成了来自 `zixiao-kit` 的最新 **ShanShui@5** 程序化国画生成模型：
 
 1. **三远透视构图（Sanyuan Composition）**：
    - 严格继承郭熙《林泉高致》之「高远」、「深远」、「平远」构图法则。

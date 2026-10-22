@@ -1,22 +1,38 @@
-# 微诗工作台 · Weishi Studio (Agent Skill)
+# 微诗词 · WeShici Skill (`/weshici`)
 
-[![Agent Skill](https://img.shields.io/badge/Agent_Skill-SKILL.md-8A2BE2)](./SKILL.md)
+[![Agent Skill](https://img.shields.io/badge/Agent_Skill-weshici--skill-8A2BE2)](./SKILL.md)
+[![Slash Command](https://img.shields.io/badge/Command-%2Fweshici-007ACC)](./SKILL.md)
 [![ZixiaoKit](https://img.shields.io/badge/Powered_by-ZixiaoKit-9B382B)](https://github.com/charsunny/zixiao-kit)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
-**微诗工作台（Weishi Studio）** 是以 **Agent Skill 为主体** 封装的中国古典诗词、二十四节气画屏与东方水墨美学确定性视觉与短视频制片引擎。
+**微诗词（WeShici Skill，快捷指令 `/weshici`）** 是以 **Agent Skill 为主体** 封装的中国古典诗词、二十四节气画屏与东方水墨美学确定性视觉与短视频制片引擎。
 
 本技能遵循标准 Agent Skill 规范（包含 [`SKILL.md`](./SKILL.md)、[`references/`](./references/)、[`scripts/`](./scripts/)、[`resources/`](./resources/) 与 [`examples/`](./examples/)），借鉴并深化了 [`lemomo-ai/lemo-opuscar`](https://github.com/lemomo-ai/lemo-opuscar) 的「将视频视为时间 $t$ 的纯函数 `window.render(t)` + 三层导演知识库」理念，深度结合 [子晓套件 `ZixiaoKit`](https://github.com/charsunny/zixiao-kit) 的最新 **ShanShui@5 算法山水模型**、中国传统色配色体系、真实人声词级对齐（Audio-First Cue Grid）和程序化东方拟音（古琴泛音、落墨、朱印闷响、宣纸翻页），彻底攻克通用生成式 AI 视频在汉字书法乱码、水墨留白失真与声画脱节上的痛点。
 
 ---
 
+## ⚡ 斜杠指令唤起 (`/weshici`)
+
+在各类 AI 编码助手或 Agent 对话框中，你可以随时键入 `/weshici` 进行快速制片：
+
+```text
+/weshici wallpaper <诗题> [诗句] [--device iphone|ipad|mac-4k] [--pure]
+/weshici image <诗题> <诗句> [--ratio 3:4|1:1|16:9|9:16]
+/weshici xiaohongshu <诗题> <诗句> [--author 作者]
+/weshici wechat <词语/诗句> [--type seal|xuan|card]
+/weshici douyin <诗题> [诗句]
+/weshici produce <诗题/诗人> [--style huaping-motion|ink-story]
+```
+
+---
+
 ## 🌟 核心能力矩阵：双层制片体系
 
-微诗工作台为 AI 助手及创作者提供 **「基础素材生成」** 与 **「高级社媒成片」** 两大维度的能力支持：
+微诗词为 AI 助手及创作者提供 **「基础素材生成」** 与 **「高级社媒成片」** 两大维度的能力支持：
 
 ```mermaid
 graph TD
-    A["微诗工作台 Weishi Studio"] --> B["基础素材生成 (Foundational Assets)"]
+    A["微诗词 WeShici Skill (/weshici)"] --> B["基础素材生成 (Foundational Assets)"]
     A --> C["高级社媒成片 (Platform-Ready Suites)"]
 
     B --> B1["📱 设备壁纸 (iPhone / iPad / Mac 4K)"]
@@ -54,8 +70,8 @@ graph TD
 > 环境依赖：**Node.js >= 18**、本机安装有 **Google Chrome**（或指定 `CHROME_PATH`）与 **FFmpeg**。
 
 ```bash
-git clone https://github.com/charsunny/weishi-studio.git
-cd weishi-studio
+git clone https://github.com/charsunny/weshici-skill.git
+cd weshici-skill
 npm install
 ```
 
@@ -65,29 +81,29 @@ npm install
 支持 iPhone Pro Max (`1290×2796`)、iPad Pro (`2048×2732`)、Mac 4K 超高清横屏 (`3840×2160`) 等规格：
 ```bash
 # 生成 iPhone 锁屏壁纸 (题字闲章版)
-npm run generate -- wallpaper --title "山居秋暝" --poem "明月松间照，清泉石上流。" --device iphone
+npm run weshici -- wallpaper --title "山居秋暝" --poem "明月松间照，清泉石上流。" --device iphone
 
 # 生成 Mac 4K 超清横屏壁纸 (纯山水无字留白版，为桌面图标留出空间)
-npm run generate -- wallpaper --title "使至塞上" --poem "大漠孤烟直，长河落日圆。" --device mac-4k --pure
+npm run weshici -- wallpaper --title "使至塞上" --poem "大漠孤烟直，长河落日圆。" --device mac-4k --pure
 
 # 生成 iPad Pro 竖屏壁纸
-npm run generate -- wallpaper --title "江雪" --poem "孤舟蓑笠翁，独钓寒江雪。" --device ipad
+npm run weshici -- wallpaper --title "江雪" --poem "孤舟蓑笠翁，独钓寒江雪。" --device ipad
 ```
 
 #### 🎨 静态意境诗画 (`image`)
 支持 `1:1`、`3:4`、`16:9`、`9:16` 等主流比例，按宣纸工笔与写意画法排布诗题、竖排诗行、作者印章与留白：
 ```bash
 # 生成 3:4 诗画 (1080×1440)
-npm run generate -- image --title "江雪" --poem "千山鸟飞绝，万径人踪灭。孤舟蓑笠翁，独钓寒江雪。" --ratio 3:4
+npm run weshici -- image --title "江雪" --poem "千山鸟飞绝，万径人踪灭。孤舟蓑笠翁，独钓寒江雪。" --ratio 3:4
 
 # 生成 1:1 方幅工笔微画 (1080×1080)
-npm run generate -- image --title "春夜喜雨" --poem "随风潜入夜，润物细无声。" --ratio 1:1
+npm run weshici -- image --title "春夜喜雨" --poem "随风潜入夜，润物细无声。" --ratio 1:1
 ```
 
 #### 🎬 动态画屏短片素材 (`video`)
 输出确定性动态渲染的 `1080×1920` MP4 视频素材，内置墨韵微流动、水波涟漪、松涛微澜与烟云流动：
 ```bash
-npm run generate -- video --title "山居秋暝" --duration 10
+npm run weshici -- video --title "山居秋暝" --duration 10
 ```
 
 ---
@@ -103,7 +119,7 @@ npm run generate -- video --title "山居秋暝" --duration 10
 - **配套文案 (`copy.md`)**：爆款吸睛标题、正文分段、情绪共鸣、热门标签（`#东方美学 #小红书图文 #国风壁纸 #山水画`）。
 
 ```bash
-npm run generate -- xiaohongshu --title "山居秋暝" --author "王维" --poem "空山新雨后，天气晚来秋。明月松间照，清泉石上流。"
+npm run weshici -- xiaohongshu --title "山居秋暝" --author "王维" --poem "空山新雨后，天气晚来秋。明月松间照，清泉石上流。"
 ```
 
 #### 💬 微信贴图 & 朋友圈日签 (`wechat-sticker` / `wechat`)
@@ -113,7 +129,7 @@ npm run generate -- xiaohongshu --title "山居秋暝" --author "王维" --poem 
 - **朋友圈日签卡 (`1080×1920`)**：当日公历大字日期、农历节气、中国传统色色卡（含色名与色值）、每日诗词金句、朱砂印章。
 
 ```bash
-npm run generate -- wechat-sticker --title "寒江独钓" --poem "孤舟蓑笠翁，独钓寒江雪。"
+npm run weshici -- wechat-sticker --title "寒江独钓" --poem "孤舟蓑笠翁，独钓寒江雪。"
 ```
 
 #### 🎵 抖音 9:16 短视频成片 (`douyin`)
@@ -124,7 +140,7 @@ npm run generate -- wechat-sticker --title "寒江独钓" --poem "孤舟蓑笠�
 - **配套发布文案**：抖音短视频文案、互动提问与热门标签。
 
 ```bash
-npm run generate -- douyin --title "使至塞上" --workers 4
+npm run weshici -- douyin --title "使至塞上" --workers 4
 ```
 
 ---
@@ -191,26 +207,26 @@ npm run render -- --scene poet-footprint --workers 4 --sheet
 ```bash
 # 方式 1：工作区技能安装（Antigravity / Claude Code 自动发现）
 mkdir -p .agents/skills
-git clone https://github.com/charsunny/weishi-studio.git .agents/skills/weishi-studio
-cd .agents/skills/weishi-studio && npm install
+git clone https://github.com/charsunny/weshici-skill.git .agents/skills/weshici-skill
+cd .agents/skills/weshici-skill && npm install
 
 # 方式 2：用户全局安装（适用于所有项目）
-git clone https://github.com/charsunny/weishi-studio.git ~/.gemini/config/skills/weishi-studio
-cd ~/.gemini/config/skills/weishi-studio && npm install
+git clone https://github.com/charsunny/weshici-skill.git ~/.gemini/config/skills/weshici-skill
+cd ~/.gemini/config/skills/weshici-skill && npm install
 ```
 
-安装后，AI Agent 将自动识别并加载该技能，你可以直接向 Agent 提问：
-> - 「用 `weishi-studio` 为王维《山居秋暝》制作 iPhone 与 Mac 4K 壁纸」
-> - 「帮我生成一组《江雪》的小红书四联图文卡片和配套文案」
-> - 「生成苏轼《寒江独钓》的微信透明印章贴图与朋友圈日签」
-> - 「为《使至塞上》制作一条 9:16 抖音短视频，确保避开右侧点赞栏与底部文字安全区」
+安装后，AI Agent 将自动识别并加载该技能，你可以直接键入 `/weshici` 或向 Agent 提问：
+> - 「`/weshici` 为王维《山居秋暝》制作 iPhone 与 Mac 4K 壁纸」
+> - 「`/weshici` 帮我生成一组《江雪》的小红书四联图文卡片和配套文案」
+> - 「`/weshici` 生成苏轼《寒江独钓》的微信透明印章贴图与朋友圈日签」
+> - 「`/weshici` 为《使至塞上》制作一条 9:16 抖音短视频，确保避开右侧点赞栏与底部文字安全区」
 
 ---
 
 ## 六、目录结构
 
 ```text
-weishi-studio/
+weshici-skill/
 ├── SKILL.md                         # Agent Skill 规范主入口 (OpenClaw / Claude / Antigravity / Cursor)
 ├── README.md                        # 项目介绍与快速上手指南
 ├── package.json                     # CLI 命令入口与依赖声明

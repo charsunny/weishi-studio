@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * 微诗工作台 · 多平台视觉素材与社媒成片生成器 (generate.mjs)
+ * 微诗词 · WeShici Skill (/weshici) · 多平台视觉素材与社媒成片生成器 (generate.mjs)
  *
  * 基础素材生成 (Foundational Assets):
  *   - wallpaper: 设备壁纸 (iPhone, iPad, Mac 4K, 桌面宽屏; 纯山水或题签闲章版)
@@ -355,10 +355,11 @@ async function main() {
 
   if (command === 'help' || command === '--help' || command === '-h') {
     console.log(`
-微诗工作台 · 多平台视觉素材与社媒成片生成器
+微诗词 · WeShici Skill (/weshici) · 多平台视觉素材与社媒成片生成器
 
 用法:
-  node scripts/generate.mjs <command> [options]
+  weshici <command> [options]
+  或: node scripts/generate.mjs <command> [options]
 
 基础素材命令:
   wallpaper       生成高清设备壁纸 (iPhone, iPad, Mac 4K; 纯山水或题跋版)
