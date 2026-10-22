@@ -226,6 +226,12 @@ C.eq = function (a, b) {
   if (!a || !b) return false;
   return a.r === b.r && a.g === b.g && a.b === b.b && a.a === b.a;
 };
+C.rgb = function (r, g, b, a) { return C(r, g, b, a === undefined ? 1 : a); };
+C.opacity = function (c, a) {
+  if (!c) return null;
+  if (Array.isArray(c)) return [c[0], c[1], c[2], (c[3] === undefined ? 1 : c[3]) * a];
+  return C(c.r, c.g, c.b, (c.a === undefined ? 1 : c.a) * a);
+};
 
 function CRect(x, y, width, height) {
   var rx = +x, ry = +y, rw = +width, rh = +height;
@@ -7206,12 +7212,26 @@ Object.assign(ShanShuiEngineV5.prototype, {
 //  11. ShanShuiSceneV4.swift — 诗意景物生成器（shanshui@4 引擎）
 // ═══════════════════════════════════════════════════════════════════════════
 
+
+function resolveVerseBox(verse, width, height) {
+  if (!verse) return new CRect(0, 0, 0, 0);
+  if (typeof verse.rect === 'function') {
+    return verse.rect(width, height).inset(-8, -8);
+  }
+  if (verse.rect && typeof verse.rect.x === 'number') {
+    var r = verse.rect;
+    return new CRect(r.x * width, r.y * height, r.width * width, r.height * height).inset(-8, -8);
+  }
+  if (typeof verse.minX === 'number') return verse;
+  return new CRect(0, 0, 0, 0);
+}
+
 class SceneStageV4 {
   constructor(seed, width, height, palette, verse, quietTop) {
     this.w = width;
     this.h = height;
     this.palette = palette;
-    this.verse = verse ? verse.rect(width, height).inset(-8, -8) : new CRect(0, 0, 0, 0);
+    this.verse = resolveVerseBox(verse, width, height);
     this.engine = new ShanShuiEngineV5('poetry-scene-v1:' + (seed ? (seed.string || seed) : ''));
     this.engine.drawTowers = false;
     this.engine.anchorLog = [];
@@ -7615,8 +7635,8 @@ function generatePoetrySceneV4(req, palette) {
   const h = 420 * Math.max(1, ratio);
   const quietTop = req.quietTop ?? 0.08;
   const verse = req.verse || null;
-  const sceneRaw = req.scene || 'retreat';
-  const scene = typeof sceneRaw === 'object' && sceneRaw !== null ? sceneRaw.scene : sceneRaw;
+  const sceneRaw = req.scene || req.variant || 'retreat';
+  const scene = resolvePoetrySceneKey(typeof sceneRaw === 'object' && sceneRaw !== null ? sceneRaw.scene : sceneRaw) || 'retreat';
   const options = req.options || {};
 
   const stage = new SceneStageV4(seed, w, h, palette, verse, quietTop);
@@ -7730,13 +7750,13 @@ class PaintingStageV5 {
     }
     this.layoutVariant = layoutHash % 4;
 
-    this.purpose = options.purpose || 'inscription';
+    this.purpose = normalizePurposeV5(options.purpose);
     this.composition = options.composition || 'corner';
 
-    if (this.purpose === 'reading' || !verse) {
+    if (this.purpose === 'reading-v1' || !verse) {
       this.verse = new CRect(0, 0, 0, 0);
     } else {
-      this.verse = verse.rect(width, height).inset(-8, -8);
+      this.verse = resolveVerseBox(verse, width, height);
     }
 
     this.engine = new ShanShuiEngineV5('poetry-painting-v1:' + this.seed);
@@ -7747,7 +7767,7 @@ class PaintingStageV5 {
     const pad = Math.min(width, height) * 0.045;
     const top = Math.max(pad, quietTop * height);
     this.contentTop = top;
-    const footer = this.purpose === 'recommendation' ? height * 0.87 : height - pad;
+    const footer = this.purpose === 'recommendation-v1' ? height * 0.87 : height - pad;
     this.footer = footer;
 
     if (!this.verse.isNull && width <= height * 1.3 && this.verse.maxY < height * 0.82) {
@@ -7758,7 +7778,7 @@ class PaintingStageV5 {
 
     let left, available;
     const verseSide = verse ? verse.side : 'right';
-    if (this.purpose === 'reading') {
+    if (this.purpose === 'reading-v1') {
       left = pad;
       available = width - 2 * pad;
     } else if (verseSide === 'right') {
@@ -7772,14 +7792,14 @@ class PaintingStageV5 {
       available = width - 2 * pad;
     }
 
-    const start = (verseSide === 'top' && this.purpose !== 'reading' && width <= height * 1.3)
+    const start = (verseSide === 'top' && this.purpose !== 'reading-v1' && width <= height * 1.3)
       ? Math.max(top, this.verse.maxY + pad)
       : top;
     const high = Math.max(60, footer - start);
 
     switch (this.composition) {
       case 'corner': {
-        const inset = this.purpose === 'reading' ? available * 0.15 : 0;
+        const inset = this.purpose === 'reading-v1' ? available * 0.15 : 0;
         this.art = new CRect(left + (verseSide === 'left' ? inset : 0), start + high * 0.08, available - inset, high * 0.87);
         break;
       }
@@ -7794,7 +7814,7 @@ class PaintingStageV5 {
       }
     }
 
-    const low = this.purpose === 'reading' ? height * 0.66 : Math.max(this.verse.maxY + pad, height * 0.58);
+    const low = this.purpose === 'reading-v1' ? height * 0.66 : Math.max(this.verse.maxY + pad, height * 0.58);
     if (width <= height * 1.3 && footer - low > 28) {
       this.foreground = new CRect(pad, low, width - 2 * pad, footer - low);
     } else {
@@ -10274,6 +10294,70 @@ class PaintingStageV5 {
   }
 }
 
+function normalizePurposeV5(purpose) {
+  if (!purpose) return 'inscription-v1';
+  if (purpose === 'reading' || purpose === 'reading-v1') return 'reading-v1';
+  if (purpose === 'recommendation' || purpose === 'recommendation-v1') return 'recommendation-v1';
+  if (purpose === 'inscription' || purpose === 'inscription-v1') return 'inscription-v1';
+  return String(purpose);
+}
+
+function mistRidgeV5(shapes, step) {
+  var f = Math.fround;
+  var minX = Infinity, maxX = -Infinity;
+  shapes.forEach(function (sh) {
+    var pts = sh.points;
+    if (!pts) return;
+    for (var i = 0; i < pts.length; i += 2) {
+      var x = f(pts[i]);
+      if (x < minX) minX = x;
+      if (x > maxX) maxX = x;
+    }
+  });
+  if (!isFinite(minX) || !(step > 0)) return { ridge: [], x0: 0 };
+  var x0 = Math.floor(minX / step) * step;
+  var n = Math.ceil((maxX - x0) / step) + 1;
+  var r = new Float32Array(n).fill(Infinity);
+  shapes.forEach(function (sh) {
+    var pts = sh.points;
+    if (!pts) return;
+    var m = pts.length / 2;
+    if (m < 2) return;
+    for (var k = 0; k < m; k++) {
+      var k1 = (k + 1) % m;
+      var ax = f(pts[k * 2]), ay = f(pts[k * 2 + 1]);
+      var bx = f(pts[k1 * 2]), by = f(pts[k1 * 2 + 1]);
+      var lo = Math.min(ax, bx), hi = Math.max(ax, bx);
+      var i = Math.ceil((lo - x0) / step);
+      var i1 = Math.floor((hi - x0) / step);
+      while (i <= i1) {
+        var x = x0 + i * step;
+        var t = hi === lo ? 0 : (x - ax) / (bx - ax);
+        var y = ay + (by - ay) * t;
+        if (y < r[i]) r[i] = y;
+        i++;
+      }
+    }
+  });
+  for (var j = 0; j < r.length; j++) if (!isFinite(r[j])) r[j] = 0;
+  return { ridge: r, x0: x0 };
+}
+
+function shapeShoelaceAreaV5(shape) {
+  var pts = shape.points;
+  if (!pts || pts.length < 6) return 0;
+  var n = pts.length / 2;
+  var area = 0;
+  var prevX = pts[(n - 1) * 2], prevY = pts[(n - 1) * 2 + 1];
+  for (var i = 0; i < n; i++) {
+    var x = pts[i * 2], y = pts[i * 2 + 1];
+    area += prevX * y - prevY * x;
+    prevX = x;
+    prevY = y;
+  }
+  return Math.abs(area);
+}
+
 function generatePoetryPaintingV5(req, palette) {
   const seed = req.seed || 'seed';
   const width = req.width || 420;
@@ -10283,7 +10367,7 @@ function generatePoetryPaintingV5(req, palette) {
   const h = 420 * Math.max(1, ratio);
   const quietTop = req.quietTop ?? 0.08;
   const verse = req.verse || null;
-  const scene = req.scene || 'retreat';
+  const scene = resolvePoetrySceneKey(req.scene || req.variant) || 'retreat';
   const options = resolveSceneOptionsForPainting(req.options, scene, typeof seed === 'object' ? (seed.string || seed.seed) : seed);
 
   const stage = new PaintingStageV5(seed, w, h, palette, verse, quietTop, options);
@@ -10295,47 +10379,65 @@ function generatePoetryPaintingV5(req, palette) {
   for (let index = 0; index < stage.parts.length; index++) {
     const part = stage.parts[index];
     const shapes = [];
-    appendPaintingShapesV5(part.canv, 'scene', palette, shapes);
-
     const record = stage.celestialLayers.find(r => r.layer === index);
-    if (record) {
-      for (let i = 0; i < shapes.length; i++) {
-        if (record.motif === 'sunset' || record.motif === 'sunrise') {
-          shapes[i].fill = C.rgb(171, 64, 51, palette.isDark ? 0.48 : 0.34);
-        } else if (record.motif === 'moon' && palette.isDark) {
-          shapes[i].fill = C.opacity(palette.ink, 0.48);
-        }
-      }
+    const motif = record ? record.motif : null;
+    appendPaintingShapesV5(part.canv, motif, palette, shapes);
+
+    function appendLayer(layer) {
+      if (!layer.shapes || !layer.shapes.length) return;
+      if (part.near) nearSpans.push({ layer: layers.length, range: [0, layer.shapes.length] });
+      layers.push(layer);
     }
 
-    if (part.near) {
-      nearSpans.push({ layer: layers.length, range: [0, shapes.length] });
-    }
-
-    if (part.mist) {
-      layers.push({
-        shapes,
+    if (part.plain) {
+      appendLayer({ shapes: shapes });
+    } else if (part.mist) {
+      const rd = mistRidgeV5(shapes, 2);
+      appendLayer({
+        shapes: shapes,
         mist: {
           depth: part.mist.depth,
           blur: part.mist.blur,
           peakOpacity: part.mist.peak,
+          ridge: rd.ridge,
+          ridgeX0: rd.x0,
+          ridgeStep: 2,
           floorY: part.mist.floorY,
           floorDepth: part.mist.floorDepth
         }
       });
-    } else if (part.fade) {
-      layers.push({
-        shapes,
-        fade: normalizeFade(part.fade)
-      });
     } else {
-      layers.push({ shapes });
+      // Match ShanShuiSceneV5.swift: wet wash underlayer + tooth crisp strokes.
+      const wet = [];
+      for (let si = 0; si < shapes.length; si++) {
+        const shape = shapes[si];
+        if (!shape.fill || !shape.points || shape.points.length < 6) continue;
+        if (shapeShoelaceAreaV5(shape) <= 50) continue;
+        wet.push({
+          points: shape.points,
+          fill: shape.fill ? opacity(shape.fill, 0.22) : null,
+          stroke: shape.stroke ? opacity(shape.stroke, 0.22) : null,
+          lineWidth: shape.lineWidth,
+          closed: shape.closed
+        });
+      }
+      const fade = part.fade ? normalizeFade(part.fade) : null;
+      appendLayer({
+        shapes: wet,
+        wash: { bleed: 0.8, rim: 0.10, grain: 0.12 },
+        fade: fade
+      });
+      appendLayer({
+        shapes: shapes,
+        tooth: 0.18,
+        fade: fade
+      });
     }
   }
 
   const paper = stage.engine.backgroundPaper();
   paper.tint = palette.ink;
-  paper.strength *= 0.45;
+  paper.strength *= 0.32;
 
   const drawing = {
     width: w,
@@ -10351,6 +10453,11 @@ function generatePoetryPaintingV5(req, palette) {
       sky: { y: [0, 0.38] }
     }
   };
+
+  if (drawing.anchors) {
+    drawing.anchors.boats = stage.boats;
+    if (!drawing.anchors.sky) drawing.anchors.sky = { y: [0, 0.38] };
+  }
 
   const trace = {
     logicalWidth: w,

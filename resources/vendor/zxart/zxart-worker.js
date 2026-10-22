@@ -519,6 +519,7 @@ self.onmessage = function (event) {
       allowsShanShuiV3: req.allowsShanShuiV3 === true,
       seed: req.seed,
       variant: req.variant,
+      scene: req.scene || req.variant,
       params: req.params,
       palette: req.palette,
       width: pw,
@@ -528,13 +529,27 @@ self.onmessage = function (event) {
       },
     });
     var bitmap = render(drawing, pw, ph);
+    function plainRect(r) {
+      if (!r || typeof r !== 'object') return null;
+      if (typeof r.minX === 'number') {
+        return { x: r.minX, y: r.minY, width: r.width, height: r.height, minX: r.minX, minY: r.minY, maxX: r.maxX, maxY: r.maxY };
+      }
+      if (r.rect && typeof r.rect === 'object' && typeof r.rect.x === 'number') {
+        return { side: r.side, vertical: r.vertical, rect: { x: r.rect.x, y: r.rect.y, width: r.rect.width, height: r.rect.height } };
+      }
+      return null;
+    }
+    function plainAnchors(a) {
+      if (!a) return null;
+      try { return JSON.parse(JSON.stringify(a)); } catch (e) { return null; }
+    }
     self.postMessage({
       ok: true,
       bitmap: bitmap,
       ms: Date.now() - t0,
-      verse: drawing.verse || null,
-      anchors: drawing.anchors || null,
-      sceneElements: drawing.sceneElements || null
+      verse: plainRect(drawing.verse),
+      anchors: plainAnchors(drawing.anchors),
+      sceneElements: plainAnchors(drawing.sceneElements)
     }, [bitmap]);
   } catch (error) {
     self.postMessage({ ok: false, error: String((error && error.message) || error) });

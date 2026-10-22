@@ -298,7 +298,7 @@ export function renderZXArt(canvas, req, workerUrl = '/vendor/zxart/zxart-worker
         seed: String(req.seed || 'weishi-2026'),
         variant: normVariant,
         scene: req.scene || normVariant,
-        params: req.params || { density: 0.9, quiet_top: 0.32, verse_side: 'left', verse_columns: 4, verse_chars: 10 },
+        params: req.params || { density: 0.9, quiet_top: 0.18, verse_side: 'right', verse_columns: 4, verse_chars: 10 },
         palette: req.palette || { paper: '#DCECEF', ink: '#425066' },
         width,
         height,

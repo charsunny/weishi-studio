@@ -18,6 +18,7 @@ import path from 'node:path';
 import { execFileSync, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import vm from 'node:vm';
+import QRCode from 'qrcode';
 
 import {
   STUDIO_ROOT,
@@ -95,6 +96,9 @@ function parseCliArgs(argv) {
     card: null,
     type: 'seal',
     workers: 4,
+    note: '',
+    solarTerm: '',
+    qr: 'https://github.com/charsunny/weshici-skill',
   };
 
   for (let i = 3; i < argv.length; i++) {
@@ -112,9 +116,48 @@ function parseCliArgs(argv) {
     else if (a === '--out' && argv[i + 1]) opts.out = argv[++i];
     else if (a === '--pure') opts.pure = true;
     else if (a === '--card' && argv[i + 1]) opts.card = Number(argv[++i]);
+    else if (a === '--note' && argv[i + 1]) opts.note = argv[++i];
+    else if (a === '--solar-term' && argv[i + 1]) opts.solarTerm = argv[++i];
+    else if (a === '--qr' && argv[i + 1]) opts.qr = argv[++i];
     else if (a === '--workers' && argv[i + 1]) opts.workers = Number(argv[++i]) || 4;
   }
   return { command, opts };
+}
+
+
+// 二十四节气近似起始日 (公历月, 日)，每气三候各约 5 日
+const SOLAR_TERMS = [
+  ['小寒',1,5],['大寒',1,20],['立春',2,4],['雨水',2,19],['惊蛰',3,5],['春分',3,20],
+  ['清明',4,4],['谷雨',4,20],['立夏',5,5],['小满',5,21],['芒种',6,5],['夏至',6,21],
+  ['小暑',7,7],['大暑',7,22],['立秋',8,7],['处暑',8,23],['白露',9,7],['秋分',9,23],
+  ['寒露',10,8],['霜降',10,23],['立冬',11,7],['小雪',11,22],['大雪',12,7],['冬至',12,21],
+];
+function solarTermLabel(date = new Date()) {
+  const y = date.getFullYear();
+  const day0 = new Date(y, date.getMonth(), date.getDate());
+  let best = null;
+  for (const yy of [y - 1, y]) for (const [n, m, d] of SOLAR_TERMS) {
+    const s = new Date(yy, m - 1, d);
+    if (s <= day0 && (!best || s > best.s)) best = { n, s };
+  }
+  const days = Math.round((day0 - best.s) / 86400000);
+  const hou = ['一', '二', '三'][Math.min(2, Math.floor(days / 5))];
+  return `${best.n} · ${hou}候`;
+}
+
+async function shareCardExtras(opts) {
+  const dir = path.join(STUDIO_ROOT, 'resources', '_cache');
+  fs.mkdirSync(dir, { recursive: true });
+  const name = `qr-${Buffer.from(opts.qr).toString('hex').slice(0, 40)}.png`;
+  await QRCode.toFile(path.join(dir, name), opts.qr, {
+    margin: 0, width: 240, errorCorrectionLevel: 'M', color: { dark: '#3D4A55', light: '#00000000' },
+  });
+  return {
+    note: opts.note || '',
+    solar_term: opts.solarTerm || solarTermLabel(),
+    qrsrc: `/resources/_cache/${name}`,
+    palette: 'yuebai',
+  };
 }
 
 async function renderCardScreenshot(serverOrigin, queryParams, outPath, width, height) {
@@ -132,6 +175,10 @@ async function renderCardScreenshot(serverOrigin, queryParams, outPath, width, h
     const url = `${serverOrigin}/resources/templates/media-suite/index.html?${new URLSearchParams(queryParams).toString()}`;
     await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30000 });
     await page.waitForFunction(() => window.READY === true, { timeout: 30000 });
+    const zx = await page.evaluate(() => window.__ZXART_RESULT__ || null);
+    if (zx) {
+      console.log(`   · Worker: ok=${zx.ok === true} fallback=${zx.fallback === true} ms=${zx.ms ?? '-'} err=${zx.error || '-'}`);
+    }
     fs.mkdirSync(path.dirname(outPath), { recursive: true });
     await page.screenshot({ path: outPath, type: 'png' });
   } finally {
@@ -186,6 +233,7 @@ async function handleImage(serverOrigin, opts, outDir) {
       author: opts.author,
       dynasty: opts.dynasty,
       scene,
+      ...(await shareCardExtras(opts)),
     },
     outPng,
     preset.width,
@@ -211,6 +259,7 @@ async function handleXiaohongshu(serverOrigin, opts, outDir) {
     { idx: 4, name: '04-wallpaper-ending.png', label: '纯享壁纸 (尾页长按保存)' },
   ];
 
+  const extras = await shareCardExtras(opts);
   for (const card of cards) {
     const cardPath = path.join(cardsDir, card.name);
     process.stdout.write(`   · 渲染卡片 ${card.idx}/4: ${card.label}...`);
@@ -224,6 +273,7 @@ async function handleXiaohongshu(serverOrigin, opts, outDir) {
         author: opts.author,
         dynasty: opts.dynasty,
         scene,
+        ...(card.idx === 1 ? extras : {}),
       },
       cardPath,
       1080,

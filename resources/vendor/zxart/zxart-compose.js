@@ -70,6 +70,7 @@
         case 'cone': return 1 - s;
         case 'dot': return Math.pow(Math.max(0, Math.sin(Math.PI * s)), 0.35) * (1 - 0.5 * s);
         case 'even': return 1;
+        case 'center': return Math.pow(Math.max(0, Math.sin(Math.PI * s)), 0.85);
         default: throw new Error('unknown brush profile ' + profile);
       }
     }

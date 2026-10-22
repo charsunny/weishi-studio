@@ -35,6 +35,7 @@ const MIME = {
   '.wav': 'audio/wav',
   '.otf': 'font/otf',
   '.ttf': 'font/ttf',
+  '.ttc': 'font/collection',
   '.woff2': 'font/woff2',
 };
 
